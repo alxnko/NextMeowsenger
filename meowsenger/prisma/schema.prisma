@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  username            String   @unique
+  passwordHash        String   // For server-side auth verification
+  publicKey           String   // Visible to everyone
+  encryptedPrivateKey String   // Decrypted client-side with password
+  allowAutoGroupAdd   Boolean  @default(true) // Privacy setting
+  
+  chats        ChatParticipant[]
+  joinRequests JoinRequest[]
+}
+
+model Chat {
+  id          String   @id @default(uuid())
+  type        String   // "DIRECT", "GROUP", "CHANNEL"
+  visibility  String   // "PUBLIC", "PRIVATE"
+  name        String?
+  description String?
+  avatar      String?
+  inviteCode  String?  @unique
+  
+  messages     Message[]
+  participants ChatParticipant[]
+  joinRequests JoinRequest[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ChatParticipant {
+  userId        String
+  chatId        String
+  role          String  // "OWNER", "ADMIN", "MEMBER"
+  encryptedKey  String  // Chat Key encrypted with User's Public Key
+  lastReadAt    DateTime @default(now())
+  
+  user          User    @relation(fields: [userId], references: [id])
+  chat          Chat    @relation(fields: [chatId], references: [id])
+
+  @@id([userId, chatId])
+}
+
+model JoinRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  chatId    String
+  status    String   // "PENDING", "APPROVED", "REJECTED"
+  
+  user      User     @relation(fields: [userId], references: [id])
+  chat      Chat     @relation(fields: [chatId], references: [id])
+}
+
+model Message {
+  id               String   @id @default(uuid())
+  encryptedContent String   // CIPHERTEXT
+  senderId         String
+  chatId           String
+  createdAt        DateTime @default(now())
+  isDeleted        Boolean  @default(false)
+  isEdited         Boolean  @default(false)
+  isForwarded      Boolean  @default(false)
+  
+  replyToId        String?
+  replyTo          Message?  @relation("ReplyTo", fields: [replyToId], references: [id])
+  replies          Message[] @relation("ReplyTo")
+  
+  chat      Chat @relation(fields: [chatId], references: [id])
+}
