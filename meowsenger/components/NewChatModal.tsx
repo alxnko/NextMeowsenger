@@ -389,7 +389,15 @@ export function NewChatModal({
                       label="Channel Slug"
                       placeholder="e.g. tech-news"
                       value={channelSlug}
-                      onChange={(e) => setChannelSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      onChange={(e) => {
+                        // Clean and format slug: lowercase, alphanumeric and hyphens only, no consecutive hyphens
+                        let slug = e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, '')
+                          .replace(/--+/g, '-')
+                          .replace(/^-+|-+$/g, '');
+                        setChannelSlug(slug);
+                      }}
                       variant="bordered"
                       description="Used in the channel URL: /c/your-slug"
                     />

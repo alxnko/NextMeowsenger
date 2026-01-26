@@ -1020,9 +1020,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                             method: "DELETE",
                             headers: { 
                               "x-user-id": user?.id || "",
-                              "Content-Type": "application/json"
                             },
-                            body: JSON.stringify({})
                           });
                           if (res.ok) {
                             window.location.href = "/";
