@@ -54,6 +54,7 @@ export default function SocketHandler(
         content: string;
         replyToId?: string;
         isForwarded?: boolean;
+        tempId?: string;
       }) => {
         try {
           const now = new Date();
@@ -88,6 +89,16 @@ export default function SocketHandler(
             },
           });
 
+          // Send confirmation back to sender with real DB ID
+          socket.emit("message_sent", {
+            tempId: data.tempId, // We'll need to send this from frontend
+            message: {
+              ...data,
+              id: message.id,
+              createdAt: now.toISOString(),
+            },
+          });
+
           io.to(data.chatId).emit("receive_message", {
             ...data,
             id: message.id,
@@ -99,9 +110,11 @@ export default function SocketHandler(
           });
 
           participants.forEach((p: any) => {
-            io.to(`user_${p.userId}`).emit("refresh_chats", {
-              chatId: data.chatId,
-            });
+            if (p.userId !== data.senderId) {
+              io.to(`user_${p.userId}`).emit("refresh_chats", {
+                chatId: data.chatId,
+              });
+            }
           });
         } catch (err) {
           console.error("Failed to process message:", err);
@@ -151,6 +164,9 @@ export default function SocketHandler(
     socket.on(
       "delete_message",
       async (data: { messageId: string; userId: string }) => {
+        console.log(
+          `[Socket] Received delete_message for ${data.messageId} by ${data.userId}`,
+        );
         try {
           const message = await prisma.message.findUnique({
             where: { id: data.messageId },
@@ -163,20 +179,39 @@ export default function SocketHandler(
             (p: any) => p.userId === data.userId,
           );
           const isSender = message.senderId === data.userId;
+          const isDirect = message.chat.type === "DIRECT";
           const isAdmin =
-            participant?.role === "ADMIN" || participant?.role === "OWNER";
+            !isDirect &&
+            (participant?.role === "ADMIN" || participant?.role === "OWNER");
+
+          console.log(
+            `[Socket] Deletion check: isSender=${isSender}, isDirect=${isDirect}, isAdmin=${isAdmin}, role=${participant?.role}`,
+          );
 
           if (isSender) {
-            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-            if (message.createdAt < oneHourAgo) {
+            // Allow sender to delete their own messages (within 24 hours for safety/testing)
+            const twentyFourHoursAgo = new Date(
+              Date.now() - 24 * 60 * 60 * 1000,
+            );
+            if (message.createdAt < twentyFourHoursAgo) {
+              console.log(
+                `[Socket] Delete blocked: Message too old (${message.createdAt})`,
+              );
               socket.emit("error", {
-                message: "Delete window expired (1 hour limit)",
+                message: "Delete window expired (24 hour limit)",
               });
               return;
             }
           } else if (!isAdmin) {
-            return; // Not sender and not admin
+            console.log(
+              `[Socket] Delete blocked: User ${data.userId} is not sender or admin`,
+            );
+            return; // Not sender and not a group admin
           }
+
+          console.log(
+            `[Socket] Logic passed. Proceeding with soft delete for ${data.messageId}`,
+          );
 
           // Soft delete
           await prisma.message.update({
@@ -188,8 +223,9 @@ export default function SocketHandler(
             id: message.id,
             chatId: message.chatId,
           });
+          console.log(`[Socket] Emitted message_deleted for ${message.id}`);
         } catch (err) {
-          console.error("Failed to delete message:", err);
+          console.error("[Socket] Failed to delete message:", err);
         }
       },
     );

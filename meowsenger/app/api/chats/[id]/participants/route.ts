@@ -69,10 +69,30 @@ export async function POST(
       });
     }
 
+    let inviteCode = null;
+    if (skippedUsers.length > 0) {
+      // Check if chat has invite code, if not generate one
+      const chat = await prisma.chat.findUnique({
+        where: { id: chatId },
+        select: { inviteCode: true },
+      });
+
+      if (!chat?.inviteCode) {
+        inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+        await prisma.chat.update({
+          where: { id: chatId },
+          data: { inviteCode },
+        });
+      } else {
+        inviteCode = chat.inviteCode;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       addedCount: toAddIds.length,
       skippedUsers,
+      inviteCode,
     });
   } catch (error) {
     console.error(error);
@@ -103,6 +123,10 @@ export async function DELETE(
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  if (!targetId) {
+    return NextResponse.json({ error: "Invalid Target User" }, { status: 400 });
+  }
+
   try {
     const requester = await prisma.chatParticipant.findUnique({
       where: { userId_chatId: { userId, chatId } },
@@ -114,12 +138,12 @@ export async function DELETE(
     const isSelf = userId === targetId;
     const isAdmin = requester.role === "ADMIN" || requester.role === "OWNER";
 
-    if (!isSelf && !isAdmin) {
+    if ((!isSelf && !isAdmin) || !requester.userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.chatParticipant.delete({
-      where: { userId_chatId: { userId: targetId, chatId } },
+      where: { userId_chatId: { userId: targetId!, chatId } },
     });
 
     return NextResponse.json({ success: true, leftUserId: targetId });

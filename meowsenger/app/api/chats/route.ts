@@ -134,12 +134,19 @@ export async function POST(request: Request) {
         .map((u: any) => u.id);
     }
 
+    let inviteCode = undefined;
+    if (skippedUsers.length > 0) {
+      // Generate invite code if users were skipped
+      inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    }
+
     const chat = await prisma.chat.create({
       data: {
         type: type as any,
         name: name || null,
         description: (request as any).description || null,
         visibility: (isPublic ? "PUBLIC" : "PRIVATE") as any,
+        inviteCode: inviteCode, // Auto-assign if generated
         participants: {
           create: finalParticipantIds.map((id: string) => ({
             userId: id,
@@ -159,7 +166,11 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ chat, skippedUsers });
+    return NextResponse.json({
+      chat,
+      skippedUsers,
+      inviteCode: chat.inviteCode,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

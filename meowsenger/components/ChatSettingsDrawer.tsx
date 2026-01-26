@@ -22,6 +22,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
 import { ContactPicker, type Contact } from "@/components/ContactPicker";
+import { useSocket } from "@/hooks/useSocket";
+import { sendAutoInvite } from "@/utils/inviteActions";
 
 // Note: Reusing Modal components if Sheet is not available, or custom Drawer
 // For this quick implementation, let's use a fixed overlay drawer using standard HTML/CSS if UI components missing
@@ -40,6 +42,7 @@ export function ChatSettingsDrawer({
   chatDetails: any;
 }) {
   const { user } = useAuth();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState<
     "members" | "requests" | "settings"
   >("members");
@@ -135,9 +138,34 @@ export function ChatSettingsDrawer({
           const skippedNames = data.skippedUsers
             .map((u: any) => u.username)
             .join(", ");
-          alert(
-            `Added ${data.addedCount} members. Some users were skipped (either already in chat or have disabled auto-add): ${skippedNames}`,
-          );
+
+          let msg = `Added ${data.addedCount} members. Some users were skipped (privacy settings): ${skippedNames}.`;
+
+          if (data.inviteCode) {
+            // Auto-send invites
+            let sentCount = 0;
+            for (const skippedUser of data.skippedUsers) {
+              const sent = await sendAutoInvite(
+                socket,
+                user,
+                skippedUser,
+                chatDetails?.name || "Group Chat",
+                data.inviteCode,
+              );
+              if (sent) sentCount++;
+            }
+
+            if (sentCount > 0) {
+              msg += `\n\n✅ Automatically sent invite links to ${sentCount} user(s) via Direct Message.`;
+              alert(msg);
+            } else {
+              msg += `\n\nShare this invite link instead:`;
+              const link = `${window.location.origin}/join/${data.inviteCode}`;
+              setTimeout(() => window.prompt(msg, link), 100);
+            }
+          } else {
+            alert(msg);
+          }
         }
 
         // Reload the page to show new members

@@ -88,6 +88,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         throw new Error(data.error || "Failed to update profile");
       }
 
+      // Update local storage to persist changes across reload
+      const storedUser = localStorage.getItem("meowsenger_user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        const updated = { ...parsed, username, allowAutoGroupAdd };
+        localStorage.setItem("meowsenger_user", JSON.stringify(updated));
+      }
+
       setSuccess("Profile updated successfully!");
       setTimeout(() => {
         window.location.reload();

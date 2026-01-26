@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useSocket } from "@/hooks/useSocket";
 import { ContactPicker, type Contact } from "@/components/ContactPicker";
+import { sendAutoInvite } from "@/utils/inviteActions";
 
 export function NewChatModal({
   isOpen,
@@ -152,9 +153,34 @@ export function NewChatModal({
         const skippedNames = data.skippedUsers
           .map((u: any) => u.username)
           .join(", ");
-        alert(
-          `Group created! Note: Some users were skipped because they have disabled automatic group addition: ${skippedNames}. You can send them an invite link from the chat settings.`,
-        );
+
+        let msg = `Group created! Note: ${skippedNames} could not be added automatically due to privacy settings.`;
+
+        if (data.inviteCode) {
+          // Auto-send invites
+          let sentCount = 0;
+          for (const skippedUser of data.skippedUsers) {
+            const sent = await sendAutoInvite(
+              socket,
+              currentUser,
+              skippedUser,
+              groupName,
+              data.inviteCode,
+            );
+            if (sent) sentCount++;
+          }
+          if (sentCount > 0) {
+            msg += `\n\n✅ Automatically sent invite links to ${sentCount} user(s) via Direct Message.`;
+            alert(msg);
+          } else {
+            // Fallback if auto-send fails
+            msg += `\n\nHere is an invite link you can send them manually:`;
+            const link = `${window.location.origin}/join/${data.inviteCode}`;
+            setTimeout(() => window.prompt(msg, link), 500);
+          }
+        } else {
+          alert(msg);
+        }
       }
 
       router.push(`/chat/${data.chat.id}`);

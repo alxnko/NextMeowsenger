@@ -12,6 +12,7 @@ import { SettingsModal } from "./SettingsModal";
 import { decryptChatMessage } from "@/utils/crypto";
 import { useSocket } from "@/hooks/useSocket";
 import { ChatListSkeleton } from "./ChatListSkeleton";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function Sidebar() {
   const { user, logout, privateKey } = useAuth();
@@ -185,102 +186,107 @@ export function Sidebar() {
         {loading ? (
           <ChatListSkeleton />
         ) : (
-          <ul className="flex flex-col gap-1">
-            {chats.map((chat, index) => {
-              const otherParticipant =
-                chat.type === "DIRECT"
-                  ? chat.participants.find((p: any) => p.user.id !== user?.id)
-                      ?.user.username
-                  : chat.name;
+          <AnimatePresence initial={false}>
+            <ul className="flex flex-col gap-1">
+              {chats.map((chat) => {
+                const otherParticipant =
+                  chat.type === "DIRECT"
+                    ? chat.participants.find((p: any) => p.user.id !== user?.id)
+                        ?.user.username
+                    : chat.name;
 
-              const isUnread =
-                chat.lastMessage &&
-                chat.lastMessage.senderId !== user?.id &&
-                (!chat.lastReadAt ||
-                  new Date(chat.lastMessage.createdAt) >
-                    new Date(chat.lastReadAt));
+                const isUnread =
+                  chat.lastMessage &&
+                  chat.lastMessage.senderId !== user?.id &&
+                  (!chat.lastReadAt ||
+                    new Date(chat.lastMessage.createdAt) >
+                      new Date(chat.lastReadAt));
 
-              const isMe = chat.lastMessage?.senderId === user?.id;
-              const sender = chat.participants?.find(
-                (p: any) => p.user.id === chat.lastMessage?.senderId,
-              )?.user;
-              const isActive = params?.id === chat.id;
+                const isMe = chat.lastMessage?.senderId === user?.id;
+                const sender = chat.participants?.find(
+                  (p: any) => p.user.id === chat.lastMessage?.senderId,
+                )?.user;
+                const isActive = params?.id === chat.id;
 
-              return (
-                <li
-                  key={chat.id}
-                  className="animate-fadeIn"
-                  style={{
-                    animationDelay: `${Math.min(index * 50, 300)}ms`,
-                    opacity: 0,
-                    animationFillMode: "forwards",
-                  }}
-                >
-                  <button
-                    onClick={() => router.push(`/chat/${chat.id}`)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group
-                        ${isActive ? "bg-zinc-100 dark:bg-zinc-800 shadow-sm" : "hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:scale-[1.01]"}
-                    `}
+                return (
+                  <motion.li
+                    key={chat.id}
+                    layout="position"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{
+                      layout: { type: "spring", stiffness: 300, damping: 30 },
+                      opacity: { duration: 0.2 },
+                    }}
+                    className="relative"
                   >
-                    <div className="relative">
-                      <Avatar
-                        size="md"
-                        name={otherParticipant}
-                        showAnimation={false}
-                      />
-                      {isUnread && (
-                        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-black animate-pulseGlow" />
-                      )}
-                    </div>
-                    <div className="flex flex-col overflow-hidden flex-1">
-                      <div className="flex justify-between items-center">
-                        <span
-                          className={`text-sm truncate transition-colors ${isActive || isUnread ? "font-bold text-black dark:text-white" : "font-semibold text-zinc-700 dark:text-zinc-300"}`}
-                        >
-                          {otherParticipant}
-                        </span>
-                        {chat.lastMessage && (
-                          <span
-                            className={`text-[10px] ${isUnread ? "text-red-500 font-bold" : "text-zinc-500"}`}
-                          >
-                            {new Date(
-                              chat.lastMessage.createdAt,
-                            ).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                    <button
+                      onClick={() => router.push(`/chat/${chat.id}`)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group
+                          ${isActive ? "bg-zinc-100 dark:bg-zinc-800 shadow-sm" : "hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:scale-[1.01]"}
+                      `}
+                    >
+                      <div className="relative">
+                        <Avatar
+                          size="md"
+                          name={otherParticipant}
+                          showAnimation={false}
+                        />
+                        {isUnread && (
+                          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-black animate-pulseGlow" />
                         )}
                       </div>
-                      <span
-                        className={`text-xs truncate mt-0.5 ${isUnread ? "text-zinc-900 dark:text-zinc-100 font-medium" : "text-zinc-400"}`}
-                      >
-                        {isMe && chat.lastMessageText && (
-                          <span className="text-zinc-500 mr-1">You:</span>
-                        )}
-                        {!isMe &&
-                          chat.type === "GROUP" &&
-                          sender &&
-                          chat.lastMessageText && (
-                            <span className="text-zinc-500 mr-1">
-                              {sender.username}:
+                      <div className="flex flex-col overflow-hidden flex-1">
+                        <div className="flex justify-between items-center">
+                          <span
+                            className={`text-sm truncate transition-colors ${isActive || isUnread ? "font-bold text-black dark:text-white" : "font-semibold text-zinc-700 dark:text-zinc-300"}`}
+                          >
+                            {otherParticipant}
+                          </span>
+                          {chat.lastMessage && (
+                            <span
+                              className={`text-[10px] ${isUnread ? "text-red-500 font-bold" : "text-zinc-500"}`}
+                            >
+                              {new Date(
+                                chat.lastMessage.createdAt,
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </span>
                           )}
-                        {chat.lastMessageText}
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-            {!loading && chats.length === 0 && (
-              <div className="text-center py-10 px-4">
-                <p className="text-zinc-500 text-xs">
-                  No active identities found. Start a new secure transmission.
-                </p>
-              </div>
-            )}
-          </ul>
+                        </div>
+                        <span
+                          className={`text-xs truncate mt-0.5 ${isUnread ? "text-zinc-900 dark:text-zinc-100 font-medium" : "text-zinc-400"}`}
+                        >
+                          {isMe && chat.lastMessageText && (
+                            <span className="text-zinc-500 mr-1">You:</span>
+                          )}
+                          {!isMe &&
+                            chat.type === "GROUP" &&
+                            sender &&
+                            chat.lastMessageText && (
+                              <span className="text-zinc-500 mr-1">
+                                {sender.username}:
+                              </span>
+                            )}
+                          {chat.lastMessageText}
+                        </span>
+                      </div>
+                    </button>
+                  </motion.li>
+                );
+              })}
+              {!loading && chats.length === 0 && (
+                <div className="text-center py-10 px-4">
+                  <p className="text-zinc-500 text-xs">
+                    No active identities found. Start a new secure transmission.
+                  </p>
+                </div>
+              )}
+            </ul>
+          </AnimatePresence>
         )}
       </ScrollShadow>
       <NewChatModal isOpen={isOpen} onOpenChange={onOpenChange} />
