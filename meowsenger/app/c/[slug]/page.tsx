@@ -15,7 +15,13 @@ export default function ChannelSlugPage({
   const router = useRouter();
   const { user } = useAuth();
   const [slug, setSlug] = useState<string>("");
-  const [channel, setChannel] = useState<any>(null);
+  const [channel, setChannel] = useState<{
+    id: string;
+    name: string;
+    description?: string;
+    avatar?: string;
+    participants?: unknown[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMember, setIsMember] = useState(false);
@@ -24,12 +30,6 @@ export default function ChannelSlugPage({
   useEffect(() => {
     params.then((p) => setSlug(p.slug));
   }, [params]);
-
-  useEffect(() => {
-    if (slug) {
-      fetchChannel();
-    }
-  }, [slug, user]);
 
   const fetchChannel = async () => {
     setLoading(true);
@@ -46,12 +46,21 @@ export default function ChannelSlugPage({
       } else {
         setError(data.error || "Failed to load channel");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to load channel");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load channel",
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (slug) {
+      fetchChannel();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, user]);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -73,8 +82,10 @@ export default function ChannelSlugPage({
       } else {
         setError("Failed to subscribe");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to subscribe");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to subscribe",
+      );
     } finally {
       setSubscribing(false);
     }
@@ -182,7 +193,7 @@ export default function ChannelSlugPage({
           </div>
 
           <p className="text-xs text-zinc-400 text-center">
-            By subscribing, you'll receive all broadcasts from this channel.
+            By subscribing, you&apos;ll receive all broadcasts from this channel.
             Only admins can send messages.
           </p>
         </div>
