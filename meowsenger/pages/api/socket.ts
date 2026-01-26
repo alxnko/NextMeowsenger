@@ -57,6 +57,36 @@ export default function SocketHandler(
         tempId?: string;
       }) => {
         try {
+          // Check if this is a channel and enforce admin-only sending
+          const chat = await prisma.chat.findUnique({
+            where: { id: data.chatId },
+            include: {
+              participants: {
+                where: { userId: data.senderId },
+              },
+            },
+          });
+
+          if (!chat) {
+            socket.emit("error", { message: "Chat not found" });
+            return;
+          }
+
+          // For channels, only admins and owners can send messages
+          if (chat.type === "CHANNEL") {
+            const senderParticipant = chat.participants[0];
+            if (
+              !senderParticipant ||
+              (senderParticipant.role !== "ADMIN" &&
+                senderParticipant.role !== "OWNER")
+            ) {
+              socket.emit("error", {
+                message: "Only admins can send messages in channels",
+              });
+              return;
+            }
+          }
+
           const now = new Date();
           const message = await prisma.message.create({
             data: {

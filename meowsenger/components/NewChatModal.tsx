@@ -30,6 +30,8 @@ export function NewChatModal({
   const [targetUsername, setTargetUsername] = useState<string | string[]>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [groupName, setGroupName] = useState("");
+  const [channelDescription, setChannelDescription] = useState("");
+  const [channelSlug, setChannelSlug] = useState("");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -191,6 +193,45 @@ export function NewChatModal({
     }
   };
 
+  const handleCreateChannel = async () => {
+    if (!groupName.trim()) {
+      setError("Channel name is required");
+      return;
+    }
+    if (isPublic && !channelSlug.trim()) {
+      setError("Slug is required for public channels");
+      return;
+    }
+    
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || "",
+        },
+        body: JSON.stringify({
+          type: "CHANNEL",
+          name: groupName,
+          description: channelDescription,
+          isPublic,
+          slug: isPublic ? channelSlug : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      onOpenChange(false);
+      router.push(`/chat/${data.chat.id}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent>
@@ -199,12 +240,16 @@ export function NewChatModal({
             <ModalHeader>Start New Conversation</ModalHeader>
             <ModalBody>
               <div className="flex w-full mb-4 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg">
-                {["private", "group"].map((key) => (
+                {["private", "group", "channel"].map((key) => (
                   <button
                     key={key}
                     onClick={() => {
                       setSelected(key);
                       setTargetUsername(key === "private" ? "" : []);
+                      setGroupName("");
+                      setChannelDescription("");
+                      setChannelSlug("");
+                      setError("");
                     }}
                     className={`
                             flex-1 text-sm font-medium py-1 px-2 rounded-md transition-all
@@ -305,6 +350,59 @@ export function NewChatModal({
                 </div>
               )}
 
+              {selected === "channel" && (
+                <div className="flex flex-col gap-4 py-2">
+                  <Input
+                    label="Channel Name"
+                    placeholder="e.g. Tech News"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    variant="bordered"
+                  />
+
+                  <Input
+                    label="Description (Optional)"
+                    placeholder="What is this channel about?"
+                    value={channelDescription}
+                    onChange={(e) => setChannelDescription(e.target.value)}
+                    variant="bordered"
+                  />
+
+                  <div className="flex items-center justify-between px-3 py-2 border rounded-lg border-zinc-200 dark:border-zinc-800">
+                    <span className="text-sm font-medium">
+                      Public Channel
+                    </span>
+                    <button
+                      onClick={() => {
+                        setIsPublic(!isPublic);
+                      }}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${isPublic ? "bg-[#00ff82]" : "bg-zinc-300 dark:bg-zinc-700"}`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${isPublic ? "left-5.5" : "left-0.5"}`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  {isPublic && (
+                    <Input
+                      label="Channel Slug"
+                      placeholder="e.g. tech-news"
+                      value={channelSlug}
+                      onChange={(e) => setChannelSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                      variant="bordered"
+                      description="Used in the channel URL: /c/your-slug"
+                    />
+                  )}
+
+                  <p className="text-[10px] text-zinc-400">
+                    {isPublic 
+                      ? "Public channels can be discovered and subscribed to by anyone via the slug."
+                      : "Private channels require approval from admins to join."}
+                  </p>
+                </div>
+              )}
+
               {error && (
                 <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
               )}
@@ -313,9 +411,14 @@ export function NewChatModal({
               <Button color="danger" variant="ghost" onPress={onClose}>
                 Cancel
               </Button>
-              {selected !== "private" && (
+              {selected === "group" && (
                 <Button isLoading={loading} onPress={handleCreateGroup}>
-                  Create {selected.charAt(0).toUpperCase() + selected.slice(1)}
+                  Create Group
+                </Button>
+              )}
+              {selected === "channel" && (
+                <Button isLoading={loading} onPress={handleCreateChannel}>
+                  Create Channel
                 </Button>
               )}
             </ModalFooter>

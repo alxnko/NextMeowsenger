@@ -64,11 +64,34 @@ export async function GET(request: Request) {
 // POST /api/chats - Create a new chat
 export async function POST(request: Request) {
   try {
-    const { type, name, participantIds, isPublic } = await request.json();
+    const { type, name, participantIds, isPublic, slug, description } = await request.json();
     const creatorId = request.headers.get("x-user-id");
 
     if (!creatorId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Validate channel-specific requirements
+    if (type === "CHANNEL") {
+      if (!name?.trim()) {
+        return NextResponse.json({ error: "Channel name is required" }, { status: 400 });
+      }
+      
+      // Validate and generate slug for public channels
+      if (isPublic) {
+        if (!slug?.trim()) {
+          return NextResponse.json({ error: "Slug is required for public channels" }, { status: 400 });
+        }
+        
+        // Check if slug is already taken
+        const existingSlug = await prisma.chat.findUnique({
+          where: { slug: slug.toLowerCase() },
+        });
+        
+        if (existingSlug) {
+          return NextResponse.json({ error: "Slug is already taken" }, { status: 400 });
+        }
+      }
+    }
 
     // If DIRECT, check if already exists
     if (type === "DIRECT") {
@@ -117,7 +140,7 @@ export async function POST(request: Request) {
     }
 
     // For GROUP type, check privacy settings of participants
-    let finalParticipantIds = participantIds;
+    let finalParticipantIds = participantIds || [];
     let skippedUsers: any[] = [];
 
     if (type === "GROUP") {
@@ -134,6 +157,11 @@ export async function POST(request: Request) {
         .map((u: any) => u.id);
     }
 
+    // For CHANNEL type, only the creator is initially added
+    if (type === "CHANNEL") {
+      finalParticipantIds = [creatorId];
+    }
+
     let inviteCode = undefined;
     if (skippedUsers.length > 0) {
       // Generate invite code if users were skipped
@@ -144,9 +172,10 @@ export async function POST(request: Request) {
       data: {
         type: type as any,
         name: name || null,
-        description: (request as any).description || null,
+        description: description || null,
         visibility: (isPublic ? "PUBLIC" : "PRIVATE") as any,
-        inviteCode: inviteCode, // Auto-assign if generated
+        inviteCode: inviteCode,
+        slug: (type === "CHANNEL" && isPublic && slug) ? slug.toLowerCase() : null,
         participants: {
           create: finalParticipantIds.map((id: string) => ({
             userId: id,

@@ -958,12 +958,87 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                   }
                 }}
               >
-                {chatDetails.visibility === "PUBLIC"
-                  ? "JOIN TRANSMISSION"
-                  : "REQUEST ACCESS"}
+                {chatDetails.type === "CHANNEL" 
+                  ? (chatDetails.visibility === "PUBLIC" ? "SUBSCRIBE" : "REQUEST ACCESS")
+                  : (chatDetails.visibility === "PUBLIC" ? "JOIN TRANSMISSION" : "REQUEST ACCESS")}
               </Button>
             )}
           </div>
+        ) : chatDetails?.type === "CHANNEL" ? (
+          // Channel: Check if user is admin
+          (() => {
+            const myParticipant = chatDetails.participants?.find(
+              (p: any) => p.userId === user?.id
+            );
+            const isAdmin = myParticipant?.role === "ADMIN" || myParticipant?.role === "OWNER";
+            
+            if (isAdmin) {
+              // Show message input for admins
+              return (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSend();
+                  }}
+                  className="flex gap-2 max-w-4xl mx-auto"
+                >
+                  <Input
+                    placeholder={
+                      privateKey ? "Broadcast message..." : "Unlocking station..."
+                    }
+                    value={inputVal}
+                    onChange={(e: any) => setInputVal(e.target.value)}
+                    className="flex-1"
+                    autoComplete="off"
+                    disabled={!privateKey}
+                  />
+                  <Button
+                    color="primary"
+                    type="submit"
+                    className="font-bold shadow-lg shadow-[#00ff82]/20"
+                    disabled={!privateKey || loading}
+                  >
+                    BROADCAST
+                  </Button>
+                </form>
+              );
+            } else {
+              // Show subscribe/unsubscribe button for non-admins
+              return (
+                <div className="flex items-center justify-center gap-3 py-2">
+                  <span className="text-sm text-zinc-500">
+                    {chatDetails.visibility === "PUBLIC" ? "Subscribed to channel" : "Member of private channel"}
+                  </span>
+                  <Button
+                    color="danger"
+                    variant="ghost"
+                    size="sm"
+                    onPress={async () => {
+                      if (confirm("Are you sure you want to leave this channel?")) {
+                        try {
+                          const res = await fetch(`/api/chats/${chatId}/participants`, {
+                            method: "DELETE",
+                            headers: { 
+                              "x-user-id": user?.id || "",
+                              "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({})
+                          });
+                          if (res.ok) {
+                            window.location.href = "/";
+                          }
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }
+                    }}
+                  >
+                    Unsubscribe
+                  </Button>
+                </div>
+              );
+            }
+          })()
         ) : (
           <form
             onSubmit={(e) => {
