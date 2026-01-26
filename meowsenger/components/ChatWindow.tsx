@@ -4,6 +4,7 @@ import { ChatSettingsDrawer } from "@/components/ChatSettingsDrawer";
 import { ForwardModal } from "@/components/ForwardModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
@@ -554,8 +555,30 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         ref={scrollRef}
       >
         {loading && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <Spinner size="lg" color="primary" />
+          <div className="flex flex-col gap-4 p-4 h-full">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => {
+              const isOwn = i % 2 === 0;
+              return (
+                <div
+                  key={i}
+                  className={`flex ${isOwn ? "justify-end" : "justify-start"} items-end gap-2`}
+                >
+                  {!isOwn && (
+                    <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                  )}
+                  <Skeleton
+                    className={`h-8 rounded-full
+                               ${
+                                 isOwn
+                                   ? "rounded-tr-none bg-[#00ff82]/30 dark:bg-[#00ff82]/10"
+                                   : "rounded-tl-none bg-zinc-200 dark:bg-zinc-800"
+                               }
+                           `}
+                    style={{ width: `${Math.max(100, Math.random() * 300)}px` }}
+                  />
+                </div>
+              );
+            })}
           </div>
         ) : (
           <>
@@ -707,7 +730,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                           </div>
                         )}
                         <div className="flex flex-wrap items-end gap-x-4 gap-y-1 min-w-[60px]">
-                          <p className="text-[13.5px] whitespace-pre-wrap wrap-break-word flex-1 leading-relaxed">
+                          <p className="text-[13.5px] whitespace-pre-wrap break-all flex-1 leading-relaxed">
                             {msg.content}
                           </p>
                           <div className="flex items-center gap-1 shrink-0 mb-0.5">

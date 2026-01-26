@@ -10,7 +10,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        "bg-zinc-200 dark:bg-zinc-800 animate-pulseGlow rounded-md",
+        "bg-zinc-200 dark:bg-zinc-800 animate-pulseGlow",
         className,
       )}
       {...props}
