@@ -11,6 +11,7 @@ import { NewChatModal } from "./NewChatModal";
 import { SettingsModal } from "./SettingsModal";
 import { decryptChatMessage } from "@/utils/crypto";
 import { useSocket } from "@/hooks/useSocket";
+import { siteConfig } from "@/lib/site-config";
 import { ChatListSkeleton } from "./ChatListSkeleton";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -296,7 +297,7 @@ export function Sidebar() {
             <span className="animate-pulse w-1 h-1 bg-[#00ff82] rounded-full"></span>
             STATION_READY
           </span>
-          <span>v1.0.5-REV</span>
+          <span>{siteConfig.version}</span>
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Card, CardBody } from "@/components/ui/Card";
 import { Link } from "@/components/ui/Link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { siteConfig } from "@/lib/site-config";
 import { useEffect } from "react";
 import { Fingerprint, Lock, ShieldOff, Zap, UserPlus } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
@@ -93,8 +94,8 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="text-zinc-500 text-lg md:text-xl max-w-2xl mb-12 font-medium">
-            Meowsenger is a modern end-to-end encrypted messaging service.{" "}
-            <br />
+            {siteConfig.name} is a modern end-to-end encrypted messaging
+            service. <br />
             No surveillance. No leaks. Just chats.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -158,7 +159,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-zinc-900 py-10 text-center">
         <p className="text-[10px] text-zinc-600 font-mono tracking-widest uppercase">
-          ALEX_NEKO // MEOWVERSE_X // MEOWSENGER_CORE_ENGINE
+          {siteConfig.author}
         </p>
       </footer>
     </div>

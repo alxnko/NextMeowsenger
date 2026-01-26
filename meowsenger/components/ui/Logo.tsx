@@ -1,4 +1,7 @@
+```typescript
 import React from "react";
+import { Zap } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -21,14 +24,14 @@ export const Logo: React.FC<LogoProps> = ({
 
   return (
     <div className={cn("flex items-center gap-2 select-none", className)}>
-      <div
+      <span
         className={cn(
-          "font-black italic tracking-tighter text-[#00ff82] transition-all hover:scale-105",
+          "font-bold text-xl tracking-tighter text-black dark:text-white uppercase",
           sizeClasses[size],
         )}
       >
-        MEOWSENGER
-      </div>
+        {siteConfig.name}
+      </span>
     </div>
   );
 };
