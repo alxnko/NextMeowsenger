@@ -6,6 +6,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   variant?: "default" | "bordered";
   description?: string;
   error?: string;
+  endContent?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -17,6 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       variant = "default",
       description,
       error,
+      endContent,
       ...props
     },
     ref,
@@ -24,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = React.useId();
 
     return (
-      <div className="flex flex-col gap-1.5 w-full">
+      <div className="flex flex-col gap-1.5 w-full relative">
         {label && (
           <label
             htmlFor={inputId}
@@ -64,6 +66,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           }
           {...props}
         />
+        {endContent && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            {endContent}
+          </div>
+        )}
         {description && !error && (
           <p
             id={`${inputId}-desc`}

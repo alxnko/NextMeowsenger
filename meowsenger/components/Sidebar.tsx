@@ -223,7 +223,13 @@ export function Sidebar() {
                     className="relative"
                   >
                     <button
-                      onClick={() => router.push(`/chat/${chat.id}`)}
+                      onClick={() => {
+                        if (chat.type === "CHANNEL") {
+                          router.push(`/c/${chat.slug || chat.id}`);
+                        } else {
+                          router.push(`/chat/${chat.id}`);
+                        }
+                      }}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left group
                           ${isActive ? "bg-zinc-100 dark:bg-zinc-800 shadow-sm" : "hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:scale-[1.01]"}
                       `}
