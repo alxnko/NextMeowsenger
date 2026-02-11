@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 // GET /api/chats - List user's chats
 export async function GET(request: Request) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.userId;
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -65,7 +67,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { type, name, participantIds, isPublic, slug, description } = await request.json();
-    const creatorId = request.headers.get("x-user-id");
+    const session = await getSession();
+    const creatorId = session?.userId;
 
     if (!creatorId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
