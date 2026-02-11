@@ -54,6 +54,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             error && "border-red-500 focus-visible:ring-red-500 animate-shake",
             // Variant
             variant === "bordered" && "border-2",
+            className,
           )}
           ref={ref}
           aria-invalid={!!error}
