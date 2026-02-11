@@ -7,6 +7,7 @@ import {
   validatePublicKey,
   validateEncryptedPrivateKey,
 } from "@/lib/validation";
+import { signSession } from "@/lib/session";
 import { createSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
@@ -53,6 +54,17 @@ export async function POST(req: Request) {
       success: true,
       user: { id: user.id, username: user.username },
     });
+
+    const token = await signSession(user.id);
+    response.cookies.set("session_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+
+    return response;
   } catch (error) {
     console.error("Signup error:", error);
     return NextResponse.json({ error: "Internal User Error" }, { status: 500 });
