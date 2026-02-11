@@ -8,6 +8,7 @@ import {
   validateEncryptedPrivateKey,
 } from "@/lib/validation";
 import { signSession } from "@/lib/session";
+import { createSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -46,7 +47,10 @@ export async function POST(req: Request) {
       },
     });
 
-    const response = NextResponse.json({
+    // Create session
+    await createSession(user.id);
+
+    return NextResponse.json({
       success: true,
       user: { id: user.id, username: user.username },
     });
