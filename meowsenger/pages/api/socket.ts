@@ -21,12 +21,10 @@ export default function SocketHandler(
   res: NextApiResponseWithSocket,
 ) {
   if (res.socket.server.io) {
-    console.log("Socket is already running");
     res.end();
     return;
   }
 
-  console.log("Socket is initializing...");
   const io = new Server(res.socket.server as any, {
     path: "/api/socket_io",
     transports: ["websocket", "polling"],
@@ -39,11 +37,8 @@ export default function SocketHandler(
   res.socket.server.io = io;
 
   io.on("connection", (socket) => {
-    console.log("New client connected:", socket.id);
-
     socket.on("join_room", (roomId) => {
       socket.join(roomId);
-      console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
 
     socket.on(
@@ -194,9 +189,6 @@ export default function SocketHandler(
     socket.on(
       "delete_message",
       async (data: { messageId: string; userId: string }) => {
-        console.log(
-          `[Socket] Received delete_message for ${data.messageId} by ${data.userId}`,
-        );
         try {
           const message = await prisma.message.findUnique({
             where: { id: data.messageId },
@@ -214,34 +206,20 @@ export default function SocketHandler(
             !isDirect &&
             (participant?.role === "ADMIN" || participant?.role === "OWNER");
 
-          console.log(
-            `[Socket] Deletion check: isSender=${isSender}, isDirect=${isDirect}, isAdmin=${isAdmin}, role=${participant?.role}`,
-          );
-
           if (isSender) {
             // Allow sender to delete their own messages (within 24 hours for safety/testing)
             const twentyFourHoursAgo = new Date(
               Date.now() - 24 * 60 * 60 * 1000,
             );
             if (message.createdAt < twentyFourHoursAgo) {
-              console.log(
-                `[Socket] Delete blocked: Message too old (${message.createdAt})`,
-              );
               socket.emit("error", {
                 message: "Delete window expired (24 hour limit)",
               });
               return;
             }
           } else if (!isAdmin) {
-            console.log(
-              `[Socket] Delete blocked: User ${data.userId} is not sender or admin`,
-            );
             return; // Not sender and not a group admin
           }
-
-          console.log(
-            `[Socket] Logic passed. Proceeding with soft delete for ${data.messageId}`,
-          );
 
           // Soft delete
           await prisma.message.update({
@@ -253,7 +231,6 @@ export default function SocketHandler(
             id: message.id,
             chatId: message.chatId,
           });
-          console.log(`[Socket] Emitted message_deleted for ${message.id}`);
         } catch (err) {
           console.error("[Socket] Failed to delete message:", err);
         }
@@ -270,9 +247,6 @@ export default function SocketHandler(
     );
 
     socket.on("mark_read", async (data: { userId: string; chatId: string }) => {
-      console.log(
-        `[Socket] Received mark_read for user ${data.userId} in chat ${data.chatId}`,
-      );
       try {
         const now = new Date();
         const updatedParticipant = await prisma.chatParticipant.update({
@@ -298,7 +272,6 @@ export default function SocketHandler(
     });
 
     socket.on("disconnect", () => {
-      console.log("Client disconnected", socket.id);
     });
   });
 
