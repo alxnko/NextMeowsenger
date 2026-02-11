@@ -1,14 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import {
+  validateUsername,
+  validatePassword,
+  validatePublicKey,
+  validateEncryptedPrivateKey,
+} from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
-    const { username, password, publicKey, encryptedPrivateKey } =
-      await req.json();
+    const body = await req.json();
+    const { username, password, publicKey, encryptedPrivateKey } = body;
 
-    if (!username || !password || !publicKey || !encryptedPrivateKey) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    const usernameError = validateUsername(username);
+    const passwordError = validatePassword(password);
+    const publicKeyError = validatePublicKey(publicKey);
+    const privateKeyError = validateEncryptedPrivateKey(encryptedPrivateKey);
+
+    const error =
+      usernameError || passwordError || publicKeyError || privateKeyError;
+
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 });
     }
 
     // Check if user exists

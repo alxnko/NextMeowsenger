@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validateUsername, validatePassword } from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
     const { username, password } = await req.json();
+
+    const usernameError = validateUsername(username);
+    const passwordError = validatePassword(password);
+
+    if (usernameError || passwordError) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
+    }
 
     const user = await prisma.user.findUnique({
       where: { username },
