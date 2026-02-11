@@ -7,6 +7,7 @@ import {
   validatePublicKey,
   validateEncryptedPrivateKey,
 } from "@/lib/validation";
+import { createSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -44,6 +45,9 @@ export async function POST(req: Request) {
         encryptedPrivateKey,
       },
     });
+
+    // Create session
+    await createSession(user.id);
 
     return NextResponse.json({
       success: true,

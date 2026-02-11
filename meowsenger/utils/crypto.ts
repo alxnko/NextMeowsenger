@@ -21,7 +21,7 @@ export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
 export async function exportKey(key: CryptoKey): Promise<string> {
   const format = key.type === "public" ? "spki" : "pkcs8";
   const exported = await window.crypto.subtle.exportKey(format, key);
-  return arrayBufferToBase64(exported);
+  return await arrayBufferToBase64(exported);
 }
 
 export async function importPublicKey(base64: string): Promise<CryptoKey> {
@@ -110,7 +110,7 @@ export async function encryptPrivateKeyWithPassword(
   packed.set(iv, salt.byteLength);
   packed.set(new Uint8Array(encryptedContent), salt.byteLength + iv.byteLength);
 
-  return arrayBufferToBase64(packed);
+  return await arrayBufferToBase64(packed);
 }
 
 export async function decryptPrivateKeyWithPassword(
@@ -186,12 +186,12 @@ export async function encryptChatMessage(
       recipient.key,
       exportedAesKey,
     );
-    keys[recipient.userId] = arrayBufferToBase64(encryptedKey);
+    keys[recipient.userId] = await arrayBufferToBase64(encryptedKey);
   }
 
   return {
-    ciphertext: arrayBufferToBase64(ciphertext),
-    iv: arrayBufferToBase64(iv),
+    ciphertext: await arrayBufferToBase64(ciphertext),
+    iv: await arrayBufferToBase64(iv),
     keys,
   };
 }
@@ -236,14 +236,18 @@ export async function decryptChatMessage(
   return decoder.decode(decryptedBuffer);
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
+function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const dataUrl = evt.target?.result as string;
+      const base64 = dataUrl.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {

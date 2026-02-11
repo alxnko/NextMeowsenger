@@ -10,13 +10,6 @@ import {
   LogOut,
   ChevronDown,
 } from "lucide-react";
-// import {
-//   Sheet,
-//   SheetContent,
-//   SheetHeader,
-//   SheetBody,
-//   SheetFooter,
-// } from "@/components/ui/Sheet"; // Assuming we have such components or using Modal
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Spinner } from "@/components/ui/Spinner";
@@ -24,11 +17,6 @@ import { useAuth } from "@/context/AuthContext";
 import { ContactPicker, type Contact } from "@/components/ContactPicker";
 import { useSocket } from "@/hooks/useSocket";
 import { sendAutoInvite } from "@/utils/inviteActions";
-
-// Note: Reusing Modal components if Sheet is not available, or custom Drawer
-// For this quick implementation, let's use a fixed overlay drawer using standard HTML/CSS if UI components missing
-// Or better, stick to the design system. I'll use a standard absolute positioned div for the drawer if Sheet doesn't exist.
-// Checking previous files, I see "components/ui/Modal" but no Sheet. I'll use a custom slide-over.
 
 export function ChatSettingsDrawer({
   isOpen,

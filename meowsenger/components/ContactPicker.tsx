@@ -32,6 +32,66 @@ export interface ContactPickerProps {
   className?: string;
 }
 
+interface ContactItemProps {
+  contact: Contact;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+  index: number;
+}
+
+const ContactItem = React.memo(({ contact, isSelected, onToggle, index }: ContactItemProps) => {
+  return (
+    <button
+      onClick={() => onToggle(contact.id)}
+      className={cn(
+        "w-full flex items-center justify-between gap-3 p-3 rounded-lg",
+        "transition-all duration-200 text-left group",
+        "animate-fadeIn",
+        isSelected
+          ? "bg-[#00ff82]/10 border border-[#00ff82]/30"
+          : "hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:scale-[1.01]",
+      )}
+      style={{
+        animationDelay: `${Math.min(index * 30, 200)}ms`,
+        opacity: 0,
+        animationFillMode: "forwards",
+      }}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <Avatar
+          name={contact.username}
+          size="sm"
+          showAnimation={false}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate">
+            {contact.username}
+          </p>
+          {contact.publicKey && (
+            <p className="text-[10px] text-zinc-500 truncate font-mono">
+              Key: {contact.publicKey.slice(0, 16)}...
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Selection Indicator */}
+      <div
+        className={cn(
+          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+          "transition-all duration-200 shrink-0",
+          isSelected
+            ? "bg-[#00ff82] border-[#00ff82] scale-100"
+            : "border-zinc-300 dark:border-zinc-600 scale-90 group-hover:scale-100",
+        )}
+      >
+        {isSelected && <Check className="w-3 h-3 text-black" />}
+      </div>
+    </button>
+  );
+});
+ContactItem.displayName = "ContactItem";
+
 export function ContactPicker({
   contacts,
   selectedIds,
@@ -52,16 +112,29 @@ export function ContactPicker({
     );
   }, [contacts, searchQuery]);
 
-  const handleToggle = (contactId: string) => {
+  // Use refs to store latest values for callbacks to avoid recreating handleToggle
+  const selectedIdsRef = React.useRef(selectedIds);
+  const onSelectionChangeRef = React.useRef(onSelectionChange);
+
+  // Update refs on every render
+  React.useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+    onSelectionChangeRef.current = onSelectionChange;
+  });
+
+  const handleToggle = React.useCallback((contactId: string) => {
+    const currentSelectedIds = selectedIdsRef.current;
+    const currentOnSelectionChange = onSelectionChangeRef.current;
+
     if (multiSelect) {
-      const newSelection = selectedIds.includes(contactId)
-        ? selectedIds.filter((id) => id !== contactId)
-        : [...selectedIds, contactId];
-      onSelectionChange(newSelection);
+      const newSelection = currentSelectedIds.includes(contactId)
+        ? currentSelectedIds.filter((id) => id !== contactId)
+        : [...currentSelectedIds, contactId];
+      currentOnSelectionChange(newSelection);
     } else {
-      onSelectionChange([contactId]);
+      currentOnSelectionChange([contactId]);
     }
-  };
+  }, [multiSelect]);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -87,59 +160,15 @@ export function ContactPicker({
             <Spinner size="sm" color="primary" />
           </div>
         ) : filteredContacts.length > 0 ? (
-          filteredContacts.map((contact, index) => {
-            const isSelected = selectedIds.includes(contact.id);
-            return (
-              <button
-                key={contact.id}
-                onClick={() => handleToggle(contact.id)}
-                className={cn(
-                  "w-full flex items-center justify-between gap-3 p-3 rounded-lg",
-                  "transition-all duration-200 text-left group",
-                  "animate-fadeIn",
-                  isSelected
-                    ? "bg-[#00ff82]/10 border border-[#00ff82]/30"
-                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:scale-[1.01]",
-                )}
-                style={{
-                  animationDelay: `${Math.min(index * 30, 200)}ms`,
-                  opacity: 0,
-                  animationFillMode: "forwards",
-                }}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar
-                    name={contact.username}
-                    size="sm"
-                    showAnimation={false}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {contact.username}
-                    </p>
-                    {contact.publicKey && (
-                      <p className="text-[10px] text-zinc-500 truncate font-mono">
-                        Key: {contact.publicKey.slice(0, 16)}...
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Selection Indicator */}
-                <div
-                  className={cn(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                    "transition-all duration-200 shrink-0",
-                    isSelected
-                      ? "bg-[#00ff82] border-[#00ff82] scale-100"
-                      : "border-zinc-300 dark:border-zinc-600 scale-90 group-hover:scale-100",
-                  )}
-                >
-                  {isSelected && <Check className="w-3 h-3 text-black" />}
-                </div>
-              </button>
-            );
-          })
+          filteredContacts.map((contact, index) => (
+            <ContactItem
+              key={contact.id}
+              contact={contact}
+              isSelected={selectedIds.includes(contact.id)}
+              onToggle={handleToggle}
+              index={index}
+            />
+          ))
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-zinc-500">
             <p className="text-sm">

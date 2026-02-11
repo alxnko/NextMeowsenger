@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { validateUsername, validatePassword } from "@/lib/validation";
+import { createSession } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
         { status: 401 },
       );
     }
+
+    // Create session
+    await createSession(user.id);
 
     // Return the Encrypted Private Key so the client can decrypt it with the password
     return NextResponse.json({
