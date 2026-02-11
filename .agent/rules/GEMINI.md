@@ -5,6 +5,7 @@ trigger: always_on
 # GEMINI.md - Antigravity Kit
 
 > This file defines how the AI behaves in this workspace.
+> **UNIVERSAL CONTEXT:** Refer to `AGENTS.md` for architectural context before beginning any mission.
 
 ---
 
