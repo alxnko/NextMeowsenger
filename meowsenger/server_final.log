@@ -1,0 +1,36 @@
+
+> meowsenger@0.1.0 dev /app/meowsenger
+> next dev --port 3000
+
+▲ Next.js 16.1.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 1250ms
+ GET /benchmark 200 in 2.9s (compile: 429ms, render: 2.5s)
+Socket is initializing...
+ GET /api/socket 200 in 125ms (compile: 110ms, render: 15ms)
+New client connected: U3jAfZiNCz5KeYkLAAAB
+○ Compiling / ...
+ GET / 200 in 3.3s (compile: 3.1s, render: 204ms)
+Client disconnected U3jAfZiNCz5KeYkLAAAB
+Socket is already running
+ GET /api/socket 200 in 11ms (compile: 5ms, render: 6ms)
+New client connected: 750WK8hul19IUINrAAAD
+Client disconnected 750WK8hul19IUINrAAAD
+ ELIFECYCLE  Command failed.
+ GET /benchmark 200 in 2.2s (compile: 13ms, render: 2.1s)
+Socket is already running
+ GET /api/socket 200 in 7ms (compile: 3ms, render: 4ms)
+Socket is already running
+ GET /api/socket 200 in 6ms (compile: 3ms, render: 3ms)
+New client connected: FP3lUpLJ6DDkyNHIAAAG
+New client connected: 2I9jCbBqqMkdc9ITAAAH
+ GET / 200 in 63ms (compile: 13ms, render: 51ms)
+Client disconnected 2I9jCbBqqMkdc9ITAAAH
+Client disconnected FP3lUpLJ6DDkyNHIAAAG
+Socket is already running
+ GET /api/socket 200 in 10ms (compile: 4ms, render: 7ms)
+New client connected: K9ssUmbqZXoQmHkjAAAJ
+Client disconnected K9ssUmbqZXoQmHkjAAAJ

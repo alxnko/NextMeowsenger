@@ -1,0 +1,149 @@
+
+> meowsenger@0.1.0 dev /app/meowsenger
+> next dev
+
+▲ Next.js 16.1.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 2.8s
+○ Compiling /benchmark ...
+ GET /benchmark 200 in 7.3s (compile: 3.9s, render: 3.4s)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 1995ms (compile: 1819ms, render: 176ms)
+ ELIFECYCLE  Command failed.
+ GET /benchmark 200 in 2.4s (compile: 98ms, render: 2.3s)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 87ms (compile: 67ms, render: 20ms)
+ GET /benchmark 200 in 3.4s (compile: 12ms, render: 3.4s)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 129ms (compile: 99ms, render: 29ms)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 75ms (compile: 63ms, render: 12ms)
+ GET /benchmark 200 in 2.4s (compile: 120ms, render: 2.3s)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 134ms (compile: 102ms, render: 33ms)
+ GET / 200 in 1028ms (compile: 907ms, render: 121ms)
+⨯ Error: Failed to load external module @prisma/client-6e5b0fdb139de1ed: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/meowsenger/node_modules/.pnpm/@prisma+client@6.2.1_prisma@6.2.1/node_modules/@prisma/client/default.js
+- /app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__60dc5d66._.js
+- /app/meowsenger/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/meowsenger/.next/dev/server/pages/api/socket.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/module-loader/node-module-loader.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/meowsenger/node_modules/.pnpm/next@16.1.4_@babel+core@7.28.6_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (lib/prisma.ts:1:1)
+    at <unknown> (pages/api/socket.ts:5:1)
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__dba3962b._.js:34:30)
+    at Object.<anonymous> (.next/dev/server/pages/api/socket.js:4:3)
+> 1 | import { PrismaClient } from "@prisma/client";
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 |
+ GET /api/socket 500 in 74ms (compile: 62ms, render: 12ms)
+[?25h
