@@ -197,17 +197,19 @@ export function NewChatModal({
 
         if (data.inviteCode) {
           // Auto-send invites
-          let sentCount = 0;
-          for (const skippedUser of data.skippedUsers) {
-            const sent = await sendAutoInvite(
-              socket,
-              currentUser,
-              skippedUser,
-              groupName,
-              data.inviteCode,
-            );
-            if (sent) sentCount++;
-          }
+          const inviteResults = await Promise.all(
+            data.skippedUsers.map((skippedUser: any) =>
+              sendAutoInvite(
+                socket,
+                currentUser,
+                skippedUser,
+                groupName,
+                data.inviteCode,
+              ),
+            ),
+          );
+          const sentCount = inviteResults.filter(Boolean).length;
+
           if (sentCount > 0) {
             msg += `\n\n✅ Automatically sent invite links to ${sentCount} user(s) via Direct Message.`;
             alert(msg);
