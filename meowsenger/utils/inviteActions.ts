@@ -8,8 +8,6 @@ export async function sendAutoInvite(
   inviteCode: string,
 ) {
   try {
-    console.log(`[AutoInvite] Starting for ${targetUser.username}`);
-
     // 1. Get or Create DM
     const res = await fetch("/api/chats", {
       method: "POST",
@@ -51,7 +49,6 @@ export async function sendAutoInvite(
       isForwarded: false,
     });
 
-    console.log(`[AutoInvite] Sent to ${targetUser.username}`);
     return true;
   } catch (e) {
     console.error(`[AutoInvite] Failed for ${targetUser.username}`, e);
