@@ -30,12 +30,51 @@ export function NewChatModal({
   const [targetUsername, setTargetUsername] = useState<string | string[]>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [groupName, setGroupName] = useState("");
+  const [channelDescription, setChannelDescription] = useState("");
+  const [channelSlug, setChannelSlug] = useState("");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [isPublic, setIsPublic] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
+
+  // Slug check state
+  const [slugStatus, setSlugStatus] = useState<
+    "idle" | "checking" | "available" | "unavailable" | "error"
+  >("idle");
+  const [slugMessage, setSlugMessage] = useState("");
+
+  useEffect(() => {
+    if (selected === "channel" && isPublic && channelSlug.length >= 3) {
+      setSlugStatus("checking");
+      const timeout = setTimeout(async () => {
+        try {
+          const res = await fetch(
+            `/api/channels/slug/check?slug=${channelSlug}`,
+          );
+          const data = await res.json();
+          if (data.available) {
+            setSlugStatus("available");
+            setSlugMessage("Slug is available");
+          } else if (data.error) {
+            setSlugStatus("error");
+            setSlugMessage(data.error);
+          } else {
+            setSlugStatus("unavailable");
+            setSlugMessage("This slug is already taken");
+          }
+        } catch (err) {
+          setSlugStatus("checking"); // Keep checking or set error
+          console.error(err);
+        }
+      }, 500); // 500ms debounce
+      return () => clearTimeout(timeout);
+    } else {
+      setSlugStatus("idle");
+      setSlugMessage("");
+    }
+  }, [channelSlug, isPublic, selected]);
 
   useEffect(() => {
     if (
@@ -191,6 +230,58 @@ export function NewChatModal({
     }
   };
 
+  const handleCreateChannel = async () => {
+    if (!groupName.trim()) {
+      setError("Channel name is required");
+      return;
+    }
+    if (isPublic && !channelSlug.trim()) {
+      setError("Slug is required for public channels");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || "",
+        },
+        body: JSON.stringify({
+          type: "CHANNEL",
+          name: groupName,
+          description: channelDescription,
+          isPublic,
+          slug: isPublic ? channelSlug : null,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      // Notify via socket - ADDED THIS
+      if (socket) {
+        // For channels, logic is we are the only participant initially
+        // We need to notify ourselves (and potentially others if we had a way to invite them immediately, but for now just us)
+        socket.emit("notify_new_chat", {
+          participantIds: [currentUser?.id], // Only notify creator for now
+          chat: data.chat,
+        });
+      }
+
+      onOpenChange(false);
+      router.push(`/chat/${data.chat.id}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isSlugValid =
+    !isPublic || (channelSlug.length >= 3 && slugStatus === "available");
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent>
@@ -199,12 +290,16 @@ export function NewChatModal({
             <ModalHeader>Start New Conversation</ModalHeader>
             <ModalBody>
               <div className="flex w-full mb-4 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg">
-                {["private", "group"].map((key) => (
+                {["private", "group", "channel"].map((key) => (
                   <button
                     key={key}
                     onClick={() => {
                       setSelected(key);
                       setTargetUsername(key === "private" ? "" : []);
+                      setGroupName("");
+                      setChannelDescription("");
+                      setChannelSlug("");
+                      setError("");
                     }}
                     className={`
                             flex-1 text-sm font-medium py-1 px-2 rounded-md transition-all
@@ -305,6 +400,99 @@ export function NewChatModal({
                 </div>
               )}
 
+              {selected === "channel" && (
+                <div className="flex flex-col gap-4 py-2">
+                  <Input
+                    label="Channel Name"
+                    placeholder="e.g. Tech News"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    variant="bordered"
+                  />
+
+                  <Input
+                    label="Description (Optional)"
+                    placeholder="What is this channel about?"
+                    value={channelDescription}
+                    onChange={(e) => setChannelDescription(e.target.value)}
+                    variant="bordered"
+                  />
+
+                  <div className="flex items-center justify-between px-3 py-2 border rounded-lg border-zinc-200 dark:border-zinc-800">
+                    <span className="text-sm font-medium">Public Channel</span>
+                    <button
+                      onClick={() => {
+                        setIsPublic(!isPublic);
+                      }}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${isPublic ? "bg-[#00ff82]" : "bg-zinc-300 dark:bg-zinc-700"}`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${isPublic ? "left-5.5" : "left-0.5"}`}
+                      ></div>
+                    </button>
+                  </div>
+
+                  {isPublic && (
+                    <div className="space-y-1">
+                      <Input
+                        label="Channel Slug"
+                        placeholder="e.g. tech-news"
+                        value={channelSlug}
+                        onChange={(e) => {
+                          // Clean and format slug: lowercase, alphanumeric and hyphens only, no consecutive hyphens
+                          let slug = e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9-]/g, "")
+                            .replace(/--+/g, "-")
+                            .replace(/^-+|-+$/g, "");
+                          setChannelSlug(slug);
+                        }}
+                        variant="bordered"
+                        endContent={
+                          slugStatus === "checking" ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full" />
+                          ) : slugStatus === "available" ? (
+                            <span className="text-green-500 text-lg">✓</span>
+                          ) : slugStatus === "unavailable" ||
+                            slugStatus === "error" ? (
+                            <span className="text-red-500 text-lg">✕</span>
+                          ) : null
+                        }
+                      />
+
+                      {/* Slug Preview & Status Message */}
+                      <div className="flex justify-between items-start px-1">
+                        <p className="text-[10px] text-zinc-500 font-mono">
+                          {window.location.origin}/c/
+                          <span
+                            className={
+                              slugStatus === "available"
+                                ? "text-green-600 font-bold"
+                                : "text-zinc-700"
+                            }
+                          >
+                            {channelSlug || "your-slug"}
+                          </span>
+                        </p>
+                        {slugMessage && (
+                          <p
+                            className={`text-[10px] ${slugStatus === "available" ? "text-green-600" : "text-red-500"}`}
+                          >
+                            {slugMessage}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-zinc-400">
+                    {isPublic
+                      ? "Public channels can be discovered and subscribed to by anyone via the slug."
+                      : "Private channels require approval from admins to join."}
+                  </p>
+                </div>
+              )}
+
               {error && (
                 <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
               )}
@@ -313,9 +501,18 @@ export function NewChatModal({
               <Button color="danger" variant="ghost" onPress={onClose}>
                 Cancel
               </Button>
-              {selected !== "private" && (
+              {selected === "group" && (
                 <Button isLoading={loading} onPress={handleCreateGroup}>
-                  Create {selected.charAt(0).toUpperCase() + selected.slice(1)}
+                  Create Group
+                </Button>
+              )}
+              {selected === "channel" && (
+                <Button
+                  isLoading={loading}
+                  onPress={handleCreateChannel}
+                  disabled={isPublic && !isSlugValid}
+                >
+                  Create Channel
                 </Button>
               )}
             </ModalFooter>

@@ -1,3 +1,5 @@
+import { siteConfig } from "@/lib/site-config";
+
 export default function ChatPage() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-default-400 p-4 text-center">

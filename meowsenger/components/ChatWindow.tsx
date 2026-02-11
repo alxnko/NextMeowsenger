@@ -506,10 +506,14 @@ export function ChatWindow({ chatId }: { chatId: string }) {
     return chatDetails.name;
   };
 
+  const isChannel = chatDetails?.type === "CHANNEL";
+
   return (
     <div className="flex flex-col h-full w-full bg-zinc-50 dark:bg-black relative overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-10 shrink-0">
+      <div
+        className={`flex items-center gap-3 p-4 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-10 shrink-0 ${isChannel ? "absolute top-0 w-full !bg-transparent border-none" : ""}`}
+      >
         <Button
           size="sm"
           variant="ghost"
@@ -551,7 +555,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
 
       {/* Messages */}
       <div
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col custom-scrollbar"
+        className={`flex-1 overflow-y-auto overflow-x-hidden p-4 flex flex-col custom-scrollbar ${isChannel ? "pt-20 pb-20" : ""}`}
         ref={scrollRef}
       >
         {loading && messages.length === 0 ? (
@@ -931,7 +935,9 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         </div>
       )}
 
-      <div className="p-4 bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-800 shrink-0">
+      <div
+        className={`p-4 bg-white dark:bg-black border-t border-zinc-100 dark:border-zinc-800 shrink-0 ${isChannel ? "absolute bottom-0 w-full !bg-transparent border-none z-20" : ""}`}
+      >
         {chatDetails?.membershipStatus === "NON_MEMBER" ||
         chatDetails?.membershipStatus === "PENDING" ? (
           <div className="flex justify-center">
@@ -958,12 +964,100 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                   }
                 }}
               >
-                {chatDetails.visibility === "PUBLIC"
-                  ? "JOIN TRANSMISSION"
-                  : "REQUEST ACCESS"}
+                {chatDetails.type === "CHANNEL"
+                  ? chatDetails.visibility === "PUBLIC"
+                    ? "SUBSCRIBE"
+                    : "REQUEST ACCESS"
+                  : chatDetails.visibility === "PUBLIC"
+                    ? "JOIN TRANSMISSION"
+                    : "REQUEST ACCESS"}
               </Button>
             )}
           </div>
+        ) : chatDetails?.type === "CHANNEL" ? (
+          // Channel: Check if user is admin
+          (() => {
+            const myParticipant = chatDetails.participants?.find(
+              (p: any) => p.userId === user?.id,
+            );
+            const isAdmin =
+              myParticipant?.role === "ADMIN" ||
+              myParticipant?.role === "OWNER";
+
+            if (isAdmin) {
+              // Show message input for admins
+              return (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSend();
+                  }}
+                  className="flex gap-2 max-w-4xl mx-auto"
+                >
+                  <Input
+                    placeholder={
+                      privateKey
+                        ? "Broadcast message..."
+                        : "Unlocking station..."
+                    }
+                    value={inputVal}
+                    onChange={(e: any) => setInputVal(e.target.value)}
+                    className="flex-1"
+                    autoComplete="off"
+                    disabled={!privateKey}
+                  />
+                  <Button
+                    color="primary"
+                    type="submit"
+                    className="font-bold shadow-lg shadow-[#00ff82]/20"
+                    disabled={!privateKey || loading}
+                  >
+                    BROADCAST
+                  </Button>
+                </form>
+              );
+            } else {
+              // Show subscribe/unsubscribe button for non-admins
+              return (
+                <div className="flex items-center justify-center gap-3 py-2">
+                  <span className="text-sm text-zinc-500">
+                    {chatDetails.visibility === "PUBLIC"
+                      ? "Subscribed to channel"
+                      : "Member of private channel"}
+                  </span>
+                  <Button
+                    color="danger"
+                    variant="ghost"
+                    size="sm"
+                    onPress={async () => {
+                      if (
+                        confirm("Are you sure you want to leave this channel?")
+                      ) {
+                        try {
+                          const res = await fetch(
+                            `/api/chats/${chatId}/participants`,
+                            {
+                              method: "DELETE",
+                              headers: {
+                                "x-user-id": user?.id || "",
+                              },
+                            },
+                          );
+                          if (res.ok) {
+                            window.location.href = "/";
+                          }
+                        } catch (e) {
+                          console.error(e);
+                        }
+                      }
+                    }}
+                  >
+                    Unsubscribe
+                  </Button>
+                </div>
+              );
+            }
+          })()
         ) : (
           <form
             onSubmit={(e) => {

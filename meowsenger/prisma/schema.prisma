@@ -27,6 +27,7 @@ model Chat {
   description String?
   avatar      String?
   inviteCode  String?  @unique
+  slug        String?  @unique // For public channel routing (e.g., /c/tech-news)
   
   messages     Message[]
   participants ChatParticipant[]
@@ -40,6 +41,7 @@ model ChatParticipant {
   userId        String
   chatId        String
   role          String  // "OWNER", "ADMIN", "MEMBER"
+  status        String  @default("active") // "active", "pending", "blocked"
   encryptedKey  String  // Chat Key encrypted with User's Public Key
   lastReadAt    DateTime @default(now())
   
