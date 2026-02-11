@@ -31,7 +31,7 @@ export default function SocketHandler(
     path: "/api/socket_io",
     transports: ["websocket", "polling"],
     cors: {
-      origin: "*",
+      origin: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       methods: ["GET", "POST"],
     },
   });
