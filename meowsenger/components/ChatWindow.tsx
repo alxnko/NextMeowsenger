@@ -486,9 +486,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
 
   const handleDeleteMessages = () => {
     if (!socket || !user) return;
-    console.log("[ChatWindow] Starting batch delete:", selectedMsgIds);
     Array.from(selectedMsgIds).forEach((id) => {
-      console.log(`[ChatWindow] Emitting delete_message for ${id}`);
       socket.emit("delete_message", { messageId: id, userId: user.id });
     });
     setSelectionMode(false);
@@ -793,9 +791,6 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                 className="h-7 w-7 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
                                 onPress={() => {
                                   if (socket && user) {
-                                    console.log(
-                                      `[ChatWindow] Emitting delete_message for msg: ${msg.id}`,
-                                    );
                                     socket.emit("delete_message", {
                                       messageId: msg.id,
                                       userId: user.id,
