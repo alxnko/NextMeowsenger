@@ -1,19 +1,11 @@
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
+import { signToken, verifyToken } from './auth-utils';
 
-const SECRET_KEY = process.env.JWT_SECRET || 'super-secret-key-change-this';
+export { verifyToken, signToken };
 
 export async function createSession(userId: string) {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  const sessionData = JSON.stringify({ userId, expires: expires.toISOString() });
-
-  // Sign the session data
-  const signature = crypto
-    .createHmac('sha256', SECRET_KEY)
-    .update(sessionData)
-    .digest('hex');
-
-  const token = `${Buffer.from(sessionData).toString('base64')}.${signature}`;
+  const token = signToken(userId, expires);
 
   const cookieStore = await cookies();
   cookieStore.set('auth_token', token, {
@@ -30,32 +22,7 @@ export async function getSession() {
   const token = cookieStore.get('auth_token')?.value;
   if (!token) return null;
 
-  try {
-    const [dataB64, signature] = token.split('.');
-    if (!dataB64 || !signature) return null;
-
-    const sessionData = Buffer.from(dataB64, 'base64').toString();
-    const expectedSignature = crypto
-      .createHmac('sha256', SECRET_KEY)
-      .update(sessionData)
-      .digest('hex');
-
-    // Use timingSafeEqual to prevent timing attacks
-    const signatureBuffer = Buffer.from(signature, 'hex');
-    const expectedSignatureBuffer = Buffer.from(expectedSignature, 'hex');
-
-    if (signatureBuffer.length !== expectedSignatureBuffer.length ||
-        !crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)) {
-      return null;
-    }
-
-    const { userId, expires } = JSON.parse(sessionData);
-    if (new Date(expires) < new Date()) return null;
-
-    return { userId };
-  } catch (e) {
-    return null;
-  }
+  return verifyToken(token);
 }
 
 export async function clearSession() {
