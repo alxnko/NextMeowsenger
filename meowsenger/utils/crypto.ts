@@ -238,7 +238,7 @@ export async function decryptChatMessage(
 
 function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): Promise<string> {
   return new Promise((resolve, reject) => {
-    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const blob = new Blob([buffer as any], { type: "application/octet-stream" });
     const reader = new FileReader();
     reader.onload = (evt) => {
       const dataUrl = evt.target?.result as string;

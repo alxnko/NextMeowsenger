@@ -23,9 +23,11 @@ function parseCookies(req: any) {
 
   rc && rc.split(';').forEach(function(cookie: string) {
     const parts = cookie.split('=');
-    const key = parts.shift().trim();
-    const value = decodeURIComponent(parts.join('='));
-    list[key] = value;
+    const key = parts.shift()?.trim();
+    if (key) {
+      const value = decodeURIComponent(parts.join('='));
+      list[key] = value;
+    }
   });
 
   return list;
