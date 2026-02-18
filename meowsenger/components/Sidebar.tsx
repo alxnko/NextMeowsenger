@@ -139,6 +139,12 @@ export function Sidebar() {
         <div
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => setIsSettingsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setIsSettingsOpen(true);
+            }
+          }}
           role="button"
           tabIndex={0}
         >
