@@ -1,6 +1,12 @@
 import crypto from 'crypto';
 
-const SECRET_KEY = process.env.JWT_SECRET || 'super-secret-key-change-this';
+function getSecretKey(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not defined');
+  }
+  return secret;
+}
 
 export function signToken(userId: string, expires?: Date): string {
   const exp = expires || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -8,7 +14,7 @@ export function signToken(userId: string, expires?: Date): string {
 
   // Sign the session data
   const signature = crypto
-    .createHmac('sha256', SECRET_KEY)
+    .createHmac('sha256', getSecretKey())
     .update(sessionData)
     .digest('hex');
 
@@ -22,7 +28,7 @@ export function verifyToken(token: string): { userId: string } | null {
 
     const sessionData = Buffer.from(dataB64, 'base64').toString();
     const expectedSignature = crypto
-      .createHmac('sha256', SECRET_KEY)
+      .createHmac('sha256', getSecretKey())
       .update(sessionData)
       .digest('hex');
 
@@ -44,7 +50,7 @@ export function verifyToken(token: string): { userId: string } | null {
     if (new Date(expires) < new Date()) return null;
 
     return { userId };
-  } catch (e) {
+  } catch {
     return null;
   }
 }
