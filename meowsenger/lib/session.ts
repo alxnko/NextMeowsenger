@@ -1,11 +1,16 @@
-const secret = process.env.SESSION_SECRET || "default-secret-change-me-in-prod";
 const encoder = new TextEncoder();
-const secretKeyData = encoder.encode(secret);
 
 let cachedKey: CryptoKey | null = null;
 
 async function getKey(): Promise<CryptoKey> {
   if (cachedKey) return cachedKey;
+
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET environment variable is not defined");
+  }
+
+  const secretKeyData = encoder.encode(secret);
 
   cachedKey = await crypto.subtle.importKey(
     "raw",
