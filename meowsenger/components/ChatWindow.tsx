@@ -517,6 +517,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
           variant="ghost"
           className="md:hidden"
           onPress={() => router.push("/chat")}
+          aria-label="Back to chat list"
         >
           ←
         </Button>
@@ -545,6 +546,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
             variant="ghost"
             className="text-zinc-500"
             onPress={() => setIsSettingsOpen(true)}
+            aria-label="Group information"
           >
             <Info className="w-5 h-5" />
           </Button>
@@ -765,6 +767,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                               variant="ghost"
                               className="h-7 w-7 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-[#00ff82]"
                               onPress={() => setReplyingTo(msg)}
+                              aria-label="Reply to message"
                             >
                               <Reply className="w-3.5 h-3.5" />
                             </Button>
@@ -777,6 +780,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                   setEditingMsg(msg);
                                   setInputVal(msg.content);
                                 }}
+                                aria-label="Edit message"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </Button>
@@ -797,6 +801,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                     });
                                   }
                                 }}
+                                aria-label="Delete message"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
@@ -809,6 +814,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                 setSelectionMode(true);
                                 toggleSelection(msg.id);
                               }}
+                              aria-label="Select message"
                             >
                               <Check className="w-3.5 h-3.5" />
                             </Button>
@@ -849,6 +855,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                 setSelectionMode(false);
                 setSelectedMsgIds(new Set());
               }}
+              aria-label="Close selection mode"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -875,6 +882,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                 setSelectionMode(false);
                 setSelectedMsgIds(new Set());
               }}
+              aria-label="Copy selected messages"
             >
               <Copy className="w-3.5 h-3.5 mr-1.5" /> COPY_DATA
             </Button>
@@ -883,6 +891,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               variant="outline"
               className="border-zinc-200 dark:border-zinc-800 font-bold tracking-tight"
               onPress={() => setIsForwardModalOpen(true)}
+              aria-label="Forward selected messages"
             >
               <CornerDownRight className="w-3.5 h-3.5 mr-1.5" /> FORWARD
             </Button>
@@ -891,6 +900,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               variant="destructive"
               className="font-bold tracking-tight shadow-lg shadow-red-500/20"
               onPress={handleDeleteMessages}
+              aria-label="Delete selected messages"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1.5" /> PURGE_LOGS
             </Button>
@@ -924,6 +934,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               setReplyingTo(null);
               if (editingMsg) setInputVal("");
             }}
+            aria-label="Cancel reply or edit"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -1000,6 +1011,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                     className="flex-1"
                     autoComplete="off"
                     disabled={!privateKey}
+                    aria-label="Broadcast message input"
                   />
                   <Button
                     color="primary"
@@ -1070,6 +1082,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               className="flex-1"
               autoComplete="off"
               disabled={!privateKey}
+              aria-label="Message input"
             />
             <Button
               color="primary"
