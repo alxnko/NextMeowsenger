@@ -43,7 +43,7 @@ export async function GET(
     let isMember = false;
     let userRole = null;
     if (userId) {
-      const participant = chat.participants.find((p) => p.userId === userId);
+      const participant = chat.participants.find((p: any) => p.userId === userId);
       if (participant) {
         isMember = true;
         userRole = participant.role;

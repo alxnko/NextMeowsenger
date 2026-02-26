@@ -29,7 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Message {
   id: string;
@@ -64,6 +64,16 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   const [jumpTarget, setJumpTarget] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null); // For mobile/context menu actions
+
+  // Optimization: Memoize lookups to prevent O(N^2) rendering
+  const messageMap = useMemo(() => {
+    return new Map(messages.map((m) => [m.id, m]));
+  }, [messages]);
+
+  const participantMap = useMemo(() => {
+    if (!chatDetails?.participants) return new Map();
+    return new Map(chatDetails.participants.map((p: any) => [p.userId, p]));
+  }, [chatDetails]);
 
   // 1. Fetch Chat Metadata
   useEffect(() => {
@@ -517,6 +527,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
           variant="ghost"
           className="md:hidden"
           onPress={() => router.push("/chat")}
+          aria-label="Back to chat list"
         >
           ←
         </Button>
@@ -545,6 +556,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
             variant="ghost"
             className="text-zinc-500"
             onPress={() => setIsSettingsOpen(true)}
+            aria-label="View chat details"
           >
             <Info className="w-5 h-5" />
           </Button>
@@ -646,9 +658,8 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                     {!isMe && isFirstInGroup ? (
                       <Avatar
                         name={
-                          chatDetails?.participants?.find(
-                            (p: any) => p.userId === msg.senderId,
-                          )?.user?.username || "?"
+                          participantMap.get(msg.senderId)?.user?.username ||
+                          "?"
                         }
                         size="sm"
                         className="mb-1"
@@ -712,13 +723,9 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                   isMe ? "text-black/90" : "opacity-70"
                                 }
                               >
-                                {messages.find((m) => m.id === msg.replyToId)
-                                  ? chatDetails?.participants?.find(
-                                      (p: any) =>
-                                        p.userId ===
-                                        messages.find(
-                                          (m) => m.id === msg.replyToId,
-                                        )?.senderId,
+                                {messageMap.get(msg.replyToId!)
+                                  ? participantMap.get(
+                                      messageMap.get(msg.replyToId!)!.senderId,
                                     )?.user?.username || "Unknown"
                                   : "Unknown"}
                               </span>
@@ -726,8 +733,8 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                             <p
                               className={`truncate text-xs ${isMe ? "text-black/80 font-medium" : "opacity-60"}`}
                             >
-                              {messages.find((m) => m.id === msg.replyToId)
-                                ?.content || "TRANSMISSION_DATA"}
+                              {messageMap.get(msg.replyToId!)?.content ||
+                                "TRANSMISSION_DATA"}
                             </p>
                           </div>
                         )}
@@ -765,6 +772,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                               variant="ghost"
                               className="h-7 w-7 text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-[#00ff82]"
                               onPress={() => setReplyingTo(msg)}
+                              aria-label="Reply to message"
                             >
                               <Reply className="w-3.5 h-3.5" />
                             </Button>
@@ -777,14 +785,14 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                   setEditingMsg(msg);
                                   setInputVal(msg.content);
                                 }}
+                                aria-label="Edit message"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </Button>
                             )}
                             {(isMe ||
-                              chatDetails?.participants?.find(
-                                (p: any) => p.userId === user?.id,
-                              )?.role !== "MEMBER") && (
+                              participantMap.get(user?.id)?.role !==
+                                "MEMBER") && (
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -797,6 +805,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                     });
                                   }
                                 }}
+                                aria-label="Delete message"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
@@ -809,6 +818,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                                 setSelectionMode(true);
                                 toggleSelection(msg.id);
                               }}
+                              aria-label="Select message"
                             >
                               <Check className="w-3.5 h-3.5" />
                             </Button>
@@ -849,6 +859,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                 setSelectionMode(false);
                 setSelectedMsgIds(new Set());
               }}
+              aria-label="Cancel selection"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -924,6 +935,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               setReplyingTo(null);
               if (editingMsg) setInputVal("");
             }}
+            aria-label="Cancel replying or editing"
           >
             <X className="w-4 h-4" />
           </Button>
