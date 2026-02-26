@@ -116,7 +116,7 @@ export function NewChatModal({
     } else {
       setSearchResults([]);
     }
-  }, [targetUsername, selected, searchResults.length]);
+  }, [targetUsername, selected]);
 
   const handleCreatePrivate = async (targetId: string) => {
     setError("");
