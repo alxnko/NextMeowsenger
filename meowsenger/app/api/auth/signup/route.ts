@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     // Create session
     await createSession(user.id);
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
       user: { id: user.id, username: user.username },
     });
