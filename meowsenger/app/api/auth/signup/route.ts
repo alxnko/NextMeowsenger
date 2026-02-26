@@ -7,6 +7,7 @@ import {
   validatePublicKey,
   validateEncryptedPrivateKey,
 } from "@/lib/validation";
+import { signSession } from "@/lib/session";
 import { createSession } from "@/lib/auth";
 
 export async function POST(req: Request) {

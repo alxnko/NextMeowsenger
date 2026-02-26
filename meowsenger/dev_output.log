@@ -1,0 +1,46 @@
+
+> meowsenger@0.1.0 dev /app/meowsenger
+> next dev
+
+▲ Next.js 16.1.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 1269ms
+ GET /signup 200 in 772ms (compile: 404ms, render: 369ms)
+ GET /api/socket 200 in 297ms (compile: 171ms, proxy.ts: 110ms, render: 16ms)
+ POST /api/auth/signup 400 in 148ms (compile: 111ms, proxy.ts: 10ms, render: 27ms)
+ GET /signup 200 in 102ms (compile: 13ms, render: 89ms)
+ GET /api/socket 200 in 17ms (compile: 7ms, proxy.ts: 7ms, render: 3ms)
+Signup error: Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique()` invocation in
+/app/meowsenger/.next/dev/server/chunks/[root-of-the-server]__43bd3711._.js:323:159
+
+  320     });
+  321 }
+  322 // Check if user exists
+→ 323 const existing = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findUnique(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider = "postgresql"
+ 7 |   url      = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (app/api/auth/signup/route.ts:31:40)
+    at <unknown> (-->  schema.prisma:7)
+    at async POST (app/api/auth/signup/route.ts:31:22)
+  29 |
+  30 |     // Check if user exists
+> 31 |     const existing = await prisma.user.findUnique({
+     |                                        ^
+  32 |       where: { username },
+  33 |     });
+  34 | {
+  clientVersion: '6.2.1',
+  errorCode: undefined
+}
+ POST /api/auth/signup 500 in 327ms (compile: 5ms, proxy.ts: 8ms, render: 313ms)
