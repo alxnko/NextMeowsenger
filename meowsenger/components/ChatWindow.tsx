@@ -383,8 +383,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
           content: string;
         }) => {
           try {
-            const m = messages.find((msg) => msg.id === id);
-            if (!m || !privateKey) return;
+            if (!privateKey) return;
 
             const packet = JSON.parse(encryptedContent);
             const content = await decryptChatMessage(
@@ -412,7 +411,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         socket.emit("leave_room", chatId);
       };
     }
-  }, [socket, isConnected, chatId, user, privateKey, messages]);
+  }, [socket, isConnected, chatId, user, privateKey]);
 
   const scrollToBottom = () => {
     if (scrollRef.current)
