@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { generateSecureRandomString } from "@/lib/utils";
 
 // GET /api/chats - List user's chats
 export async function GET(request: Request) {
@@ -168,7 +169,7 @@ export async function POST(request: Request) {
     let inviteCode = undefined;
     if (skippedUsers.length > 0) {
       // Generate invite code if users were skipped
-      inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+      inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${generateSecureRandomString(5).toUpperCase()}`;
     }
 
     const chat = await prisma.chat.create({

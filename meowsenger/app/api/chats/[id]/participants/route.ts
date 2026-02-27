@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { generateSecureRandomString } from "@/lib/utils";
 
 // POST: Add specific user (Admin only)
 export async function POST(
@@ -78,7 +79,7 @@ export async function POST(
       });
 
       if (!chat?.inviteCode) {
-        inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+        inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${generateSecureRandomString(5).toUpperCase()}`;
         await prisma.chat.update({
           where: { id: chatId },
           data: { inviteCode },
