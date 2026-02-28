@@ -6,7 +6,7 @@ import { generateSecureRandomString } from "@/lib/utils";
 // GET /api/chats - List user's chats
 export async function GET(request: Request) {
   const session = await getSession();
-  const userId = session?.userId;
+  const userId = session?.id;
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,6 +19,7 @@ export async function GET(request: Request) {
         chat: {
           include: {
             participants: {
+              take: 5,
               include: {
                 user: {
                   select: {
@@ -38,11 +39,60 @@ export async function GET(request: Request) {
       },
     });
 
-    const chats = participants.map((p: any) => ({
-      ...p.chat,
-      lastMessage: p.chat.messages[0] || null,
-      lastReadAt: p.lastReadAt, // Add this line
-    }));
+    // Collect senderIds from lastMessages that are not in the fetched participants
+    const missingSenderIds = new Set<string>();
+    const chats = participants.map((p: any) => {
+      const chat = p.chat;
+      const lastMessage = chat.messages[0] || null;
+      if (lastMessage) {
+        const senderId = lastMessage.senderId;
+        const senderInParticipants = chat.participants.some(
+          (cp: any) => cp.user.id === senderId,
+        );
+        if (!senderInParticipants) {
+          missingSenderIds.add(senderId);
+        }
+      }
+
+      return {
+        ...chat,
+        lastMessage,
+        lastReadAt: p.lastReadAt,
+      };
+    });
+
+    // Fetch missing sender details
+    if (missingSenderIds.size > 0) {
+      const additionalUsers = await prisma.user.findMany({
+        where: { id: { in: Array.from(missingSenderIds) } },
+        select: { id: true, username: true, publicKey: true },
+      });
+
+      const userMap = new Map(additionalUsers.map((u) => [u.id, u]));
+
+      // Append missing senders to chat participants so frontend can resolve "You: ..." or "Username: ..."
+      for (const chat of chats) {
+        if (
+          chat.lastMessage &&
+          !chat.participants.some(
+            (cp: any) => cp.user.id === chat.lastMessage.senderId,
+          )
+        ) {
+          const user = userMap.get(chat.lastMessage.senderId);
+          if (user) {
+            // Structure it like a ChatParticipant
+            chat.participants.push({
+              user,
+              userId: user.id,
+              chatId: chat.id,
+              // Minimal dummy fields if needed by types, though frontend mainly accesses .user
+              role: "MEMBER",
+              encryptedKey: "",
+            });
+          }
+        }
+      }
+    }
 
     chats.sort((a: any, b: any) => {
       const dateA = new Date(
@@ -69,7 +119,7 @@ export async function POST(request: Request) {
   try {
     const { type, name, participantIds, isPublic, slug, description } = await request.json();
     const session = await getSession();
-    const creatorId = session?.userId;
+    const creatorId = session?.id;
 
     if (!creatorId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
