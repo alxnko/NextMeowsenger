@@ -73,3 +73,33 @@ export async function deleteSession() {
   const cookieStore = await cookies();
   cookieStore.delete("session_token");
 }
+
+export function verifyToken(token: string) {
+  try {
+    const [b64Payload, signature] = token.split(".");
+    if (!b64Payload || !signature) return null;
+
+    const payloadStr = Buffer.from(b64Payload, "base64").toString();
+
+    if (!verify(payloadStr, signature)) {
+      return null;
+    }
+
+    const payload = JSON.parse(payloadStr);
+    if (new Date(payload.expiresAt) < new Date()) {
+      return null;
+    }
+
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function isAdminUser(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true },
+  });
+  return !!user?.isAdmin;
+}
