@@ -1,0 +1,3 @@
+## 2024-05-24 - Semantic ARIA roles for custom Next.js UI components
+**Learning:** Custom interactive components like switches and tab lists built with `div` and `button` elements in this app's design system frequently lack necessary semantic ARIA roles (`role="switch"`, `role="tablist"`). Relying solely on visual styling masks these accessibility gaps for screen readers.
+**Action:** When inspecting or refactoring custom UI components that mimic native form controls or tabs, explicitly verify and inject the correct ARIA attributes to ensure semantic equivalence, particularly in heavily styled `div`/`button` wrappers.
