@@ -207,7 +207,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <div className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">
+                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight" id="auto-group-add-label">
                           Auto Group Addition
                         </span>
                         <span className="text-[10px] text-zinc-500">
@@ -216,6 +216,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       </div>
                       <button
                         type="button"
+                        role="switch"
+                        aria-checked={allowAutoGroupAdd}
+                        aria-labelledby="auto-group-add-label"
                         onClick={() => setAllowAutoGroupAdd(!allowAutoGroupAdd)}
                         className={`w-10 h-5 rounded-full relative transition-colors ${allowAutoGroupAdd ? "bg-[#00ff82]" : "bg-zinc-300 dark:bg-zinc-700"}`}
                       >

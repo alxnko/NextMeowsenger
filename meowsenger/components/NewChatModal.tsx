@@ -291,10 +291,12 @@ export function NewChatModal({
           <>
             <ModalHeader>Start New Conversation</ModalHeader>
             <ModalBody>
-              <div className="flex w-full mb-4 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg">
+              <div className="flex w-full mb-4 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg" role="tablist" aria-label="Chat Type">
                 {["private", "group", "channel"].map((key) => (
                   <button
                     key={key}
+                    role="tab"
+                    aria-selected={selected === key}
                     onClick={() => {
                       setSelected(key);
                       setTargetUsername(key === "private" ? "" : []);
@@ -385,10 +387,13 @@ export function NewChatModal({
                   </div>
 
                   <div className="flex items-center justify-between px-3 py-2 border rounded-lg border-zinc-200 dark:border-zinc-800">
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium" id="public-status-label">
                       Public Status (Visible to All)
                     </span>
                     <button
+                      role="switch"
+                      aria-checked={isPublic}
+                      aria-labelledby="public-status-label"
                       onClick={() => {
                         setIsPublic(!isPublic);
                       }}
@@ -421,8 +426,11 @@ export function NewChatModal({
                   />
 
                   <div className="flex items-center justify-between px-3 py-2 border rounded-lg border-zinc-200 dark:border-zinc-800">
-                    <span className="text-sm font-medium">Public Channel</span>
+                    <span className="text-sm font-medium" id="public-channel-label">Public Channel</span>
                     <button
+                      role="switch"
+                      aria-checked={isPublic}
+                      aria-labelledby="public-channel-label"
                       onClick={() => {
                         setIsPublic(!isPublic);
                       }}
