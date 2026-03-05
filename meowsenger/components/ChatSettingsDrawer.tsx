@@ -130,18 +130,19 @@ export function ChatSettingsDrawer({
           let msg = `Added ${data.addedCount} members. Some users were skipped (privacy settings): ${skippedNames}.`;
 
           if (data.inviteCode) {
-            // Auto-send invites
-            let sentCount = 0;
-            for (const skippedUser of data.skippedUsers) {
-              const sent = await sendAutoInvite(
-                socket,
-                user,
-                skippedUser,
-                chatDetails?.name || "Group Chat",
-                data.inviteCode,
-              );
-              if (sent) sentCount++;
-            }
+            // Auto-send invites (parallelized for performance)
+            const inviteResults = await Promise.all(
+              data.skippedUsers.map((skippedUser: any) =>
+                sendAutoInvite(
+                  socket,
+                  user,
+                  skippedUser,
+                  chatDetails?.name || "Group Chat",
+                  data.inviteCode,
+                ),
+              ),
+            );
+            const sentCount = inviteResults.filter(Boolean).length;
 
             if (sentCount > 0) {
               msg += `\n\n✅ Automatically sent invite links to ${sentCount} user(s) via Direct Message.`;
