@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { useAuth } from "@/context/AuthContext";
 import { useSocket } from "@/hooks/useSocket";
+import { generateSecureRandomString } from "@/lib/utils";
 import {
   decryptChatMessage,
   encryptChatMessage,
@@ -318,7 +319,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
             setMessages((prev) => [
               ...prev,
               {
-                id: data.id || Date.now().toString() + Math.random(),
+                id: data.id || `${Date.now()}-${generateSecureRandomString(9)}`,
                 senderId: data.senderId,
                 content,
                 createdAt: data.createdAt
@@ -412,7 +413,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   const handleSend = async () => {
     if (!inputVal.trim() || !socket || !privateKey || !chatDetails) return;
     const plainText = inputVal;
-    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const tempId = `temp-${Date.now()}-${generateSecureRandomString(9)}`;
     setInputVal("");
     try {
       const recipientKeys = await Promise.all(

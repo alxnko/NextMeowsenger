@@ -1,3 +1,4 @@
+import { generateSecureRandomString } from "@/lib/utils";
 import { encryptChatMessage, importPublicKey } from "./crypto";
 
 export async function sendAutoInvite(
@@ -38,7 +39,7 @@ export async function sendAutoInvite(
     const text = `I invited you to group '${groupName}'.\nUse this link to join: ${window.location.origin}/join/${inviteCode}`;
     const packet = await encryptChatMessage(text, recipientKeys);
     const encryptedContent = JSON.stringify(packet);
-    const tempId = `invite-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const tempId = `invite-${Date.now()}-${generateSecureRandomString(9)}`;
 
     // 4. Send via Socket
     socket.emit("send_message", {
