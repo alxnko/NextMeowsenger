@@ -34,15 +34,17 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const usersPrivacy = await prisma.user.findMany({
-      where: { id: { in: participantIds } },
-      select: { id: true, username: true, allowAutoGroupAdd: true },
-    });
-
-    const existingParticipants = await prisma.chatParticipant.findMany({
-      where: { chatId, userId: { in: participantIds } },
-      select: { userId: true },
-    });
+    // Parallelize independent queries to minimize request latency
+    const [usersPrivacy, existingParticipants] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: participantIds } },
+        select: { id: true, username: true, allowAutoGroupAdd: true },
+      }),
+      prisma.chatParticipant.findMany({
+        where: { chatId, userId: { in: participantIds } },
+        select: { userId: true },
+      }),
+    ]);
 
     const existingIds = new Set(
       existingParticipants.map((p: { userId: string }) => p.userId),
