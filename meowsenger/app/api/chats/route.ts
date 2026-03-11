@@ -44,9 +44,13 @@ export async function GET(request: Request) {
     const chats = participants.map((p: any) => {
       const chat = p.chat;
       const lastMessage = chat.messages[0] || null;
+
+      let senderInParticipants = true;
+
       if (lastMessage) {
         const senderId = lastMessage.senderId;
-        const senderInParticipants = chat.participants.some(
+        // Check if sender is among the fetched participants
+        senderInParticipants = chat.participants.some(
           (cp: any) => cp.user.id === senderId,
         );
         if (!senderInParticipants) {
@@ -58,6 +62,7 @@ export async function GET(request: Request) {
         ...chat,
         lastMessage,
         lastReadAt: p.lastReadAt,
+        _senderInParticipants: senderInParticipants, // Store result for second pass
       };
     });
 
@@ -72,12 +77,7 @@ export async function GET(request: Request) {
 
       // Append missing senders to chat participants so frontend can resolve "You: ..." or "Username: ..."
       for (const chat of chats) {
-        if (
-          chat.lastMessage &&
-          !chat.participants.some(
-            (cp: any) => cp.user.id === chat.lastMessage.senderId,
-          )
-        ) {
+        if (chat.lastMessage && !chat._senderInParticipants) {
           const user = userMap.get(chat.lastMessage.senderId);
           if (user) {
             // Structure it like a ChatParticipant
@@ -92,6 +92,11 @@ export async function GET(request: Request) {
           }
         }
       }
+    }
+
+    // Clean up temporary performance optimization property
+    for (const chat of chats) {
+      delete chat._senderInParticipants;
     }
 
     chats.sort((a: any, b: any) => {
