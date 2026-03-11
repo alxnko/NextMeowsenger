@@ -317,7 +317,7 @@ export function ChatSettingsDrawer({
       {/* Header */}
       <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
         <h2 className="font-bold text-lg">Transmission Data</h2>
-        <button onClick={onClose} className="text-zinc-500 hover:text-red-500">
+        <button onClick={onClose} aria-label="Close settings" className="text-zinc-500 hover:text-red-500">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -376,6 +376,7 @@ export function ChatSettingsDrawer({
                       setShowAddMembers(false);
                       setSelectedContacts([]);
                     }}
+                    aria-label="Cancel adding members"
                     className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                   >
                     <X className="w-4 h-4" />
