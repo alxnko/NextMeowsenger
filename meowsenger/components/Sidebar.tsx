@@ -41,7 +41,6 @@ export function Sidebar() {
       socket.emit("join_room", `user_${user.id}`);
 
       const handleNewChat = (data: any) => {
-        console.log("New chat notification received", data);
         // Simple debounce: wait 500ms, if called again, reset timer
         if ((window as any).refreshTimeout) {
           clearTimeout((window as any).refreshTimeout);
@@ -53,17 +52,12 @@ export function Sidebar() {
 
       const handleRefreshChats = (data: any) => {
         if (data.chatId && data.lastReadAt) {
-          console.log("Optimistic update for chat read status", data);
           setChats((prev) =>
             prev.map((c) =>
               c.id === data.chatId ? { ...c, lastReadAt: data.lastReadAt } : c,
             ),
           );
         } else {
-          console.log(
-            "Fallback to fetchChats because lastReadAt missing",
-            data,
-          );
           handleNewChat(data);
         }
       };
