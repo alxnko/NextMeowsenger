@@ -18,7 +18,7 @@ interface NextApiResponseWithSocket extends NextApiResponse {
 }
 
 function parseCookies(req: any) {
-  const list: any = {};
+  const list: any = Object.create(null);
   const rc = req.headers.cookie;
 
   rc && rc.split(';').forEach(function(cookie: string) {
