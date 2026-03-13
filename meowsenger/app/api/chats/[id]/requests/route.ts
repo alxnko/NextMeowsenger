@@ -73,7 +73,7 @@ export async function PUT(
       where: { id: requestId },
     });
 
-    if (!joinRequest)
+    if (!joinRequest || joinRequest.chatId !== chatId)
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
 
     if (action === "APPROVE") {
