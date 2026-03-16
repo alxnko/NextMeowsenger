@@ -89,9 +89,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   // Smart Mark Read: Only emit if actually unread
   useEffect(() => {
     if (socket && isConnected && user && chatId && chatDetails) {
-      const myParticipant = chatDetails.participants?.find(
-        (p: any) => p.userId === user.id,
-      );
+      const myParticipant = participantMap.get(user.id);
 
       let lastMessageTime = null;
       let isByType = false;
@@ -502,10 +500,15 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   const getChatName = () => {
     if (!chatDetails) return "Secured Line";
     if (chatDetails.type === "DIRECT") {
-      return (
-        chatDetails.participants.find((p: any) => p.userId !== user?.id)?.user
-          .username || "Direct Chat"
-      );
+      if (chatDetails.participants) {
+        // Optimization: Find the first participant that is not the current user
+        for (const p of chatDetails.participants) {
+          if (p.userId !== user?.id) {
+            return p.user.username;
+          }
+        }
+      }
+      return "Direct Chat";
     }
     return chatDetails.name;
   };
@@ -697,7 +700,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
               onPress={() => {
                 navigator.clipboard.writeText(
                   Array.from(selectedMsgIds)
-                    .map((id) => messages.find((m) => m.id === id)?.content)
+                    .map((id) => messageMap.get(id)?.content)
                     .join("\n"),
                 );
                 setSelectionMode(false);
@@ -801,9 +804,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         ) : chatDetails?.type === "CHANNEL" ? (
           // Channel: Check if user is admin
           (() => {
-            const myParticipant = chatDetails.participants?.find(
-              (p: any) => p.userId === user?.id,
-            );
+            const myParticipant = user?.id ? participantMap.get(user.id) : undefined;
             const isAdmin =
               myParticipant?.role === "ADMIN" ||
               myParticipant?.role === "OWNER";
@@ -921,7 +922,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         }}
         selectedMessages={Array.from(selectedMsgIds).map((id) => ({
           id,
-          content: messages.find((m) => m.id === id)?.content || "",
+          content: messageMap.get(id)?.content || "",
         }))}
         currentChatId={chatId}
       />

@@ -90,6 +90,30 @@ export function Sidebar() {
       // Decrypted last messages if possible
       const decryptedChats = await Promise.all(
         (data.chats || []).map(async (chat: any) => {
+          const participantMap = new Map();
+          if (chat.participants) {
+            for (const p of chat.participants) {
+              participantMap.set(p.user.id, p);
+            }
+          }
+
+          // Pre-calculate display name
+          let displayName = chat.name;
+          if (chat.type === "DIRECT" && chat.participants) {
+            for (const p of chat.participants) {
+              if (p.user.id !== user?.id) {
+                displayName = p.user.username;
+                break;
+              }
+            }
+          }
+
+          const baseChat = {
+            ...chat,
+            _participantMap: participantMap,
+            _displayName: displayName || "Direct Chat",
+          };
+
           if (chat.lastMessage && privateKey) {
             try {
               const packet = JSON.parse(chat.lastMessage.encryptedContent);
@@ -98,13 +122,13 @@ export function Sidebar() {
                 privateKey,
                 user!.id,
               );
-              return { ...chat, lastMessageText: decrypted };
+              return { ...baseChat, lastMessageText: decrypted };
             } catch (e) {
-              return { ...chat, lastMessageText: "[Encrypted]" };
+              return { ...baseChat, lastMessageText: "[Encrypted]" };
             }
           }
           return {
-            ...chat,
+            ...baseChat,
             lastMessageText: chat.lastMessage
               ? "[Encrypted]"
               : "No messages yet",
@@ -190,12 +214,6 @@ export function Sidebar() {
           <AnimatePresence initial={false}>
             <ul className="flex flex-col gap-1">
               {chats.map((chat) => {
-                const otherParticipant =
-                  chat.type === "DIRECT"
-                    ? chat.participants.find((p: any) => p.user.id !== user?.id)
-                        ?.user.username
-                    : chat.name;
-
                 const isUnread =
                   chat.lastMessage &&
                   chat.lastMessage.senderId !== user?.id &&
@@ -204,9 +222,6 @@ export function Sidebar() {
                       new Date(chat.lastReadAt));
 
                 const isMe = chat.lastMessage?.senderId === user?.id;
-                const sender = chat.participants?.find(
-                  (p: any) => p.user.id === chat.lastMessage?.senderId,
-                )?.user;
                 const isActive = params?.id === chat.id;
 
                 return (
@@ -237,7 +252,7 @@ export function Sidebar() {
                       <div className="relative">
                         <Avatar
                           size="md"
-                          name={otherParticipant}
+                          name={chat._displayName}
                           showAnimation={false}
                         />
                         {isUnread && (
@@ -249,7 +264,7 @@ export function Sidebar() {
                           <span
                             className={`text-sm truncate transition-colors ${isActive || isUnread ? "font-bold text-black dark:text-white" : "font-semibold text-zinc-700 dark:text-zinc-300"}`}
                           >
-                            {otherParticipant}
+                            {chat._displayName}
                           </span>
                           {chat.lastMessage && (
                             <span
@@ -272,10 +287,11 @@ export function Sidebar() {
                           )}
                           {!isMe &&
                             chat.type === "GROUP" &&
-                            sender &&
+                            chat.lastMessage?.senderId &&
+                            chat._participantMap?.get(chat.lastMessage.senderId)?.user?.username &&
                             chat.lastMessageText && (
                               <span className="text-zinc-500 mr-1">
-                                {sender.username}:
+                                {chat._participantMap.get(chat.lastMessage.senderId).user.username}:
                               </span>
                             )}
                           {chat.lastMessageText}
