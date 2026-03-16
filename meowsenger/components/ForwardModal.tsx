@@ -46,8 +46,33 @@ export function ForwardModal({
       });
       const data = await res.json();
       if (data.chats) {
-        // Filter out the current chat
-        setChats(data.chats.filter((c: any) => c.id !== currentChatId));
+        // Filter out the current chat and pre-calculate display names
+        const processedChats = data.chats
+          .filter((c: any) => c.id !== currentChatId)
+          .map((c: any) => {
+            const participantMap = new Map();
+            if (c.participants) {
+              for (const p of c.participants) {
+                participantMap.set(p.userId, p);
+              }
+            }
+
+            let displayName = c.name;
+            if (c.type === "DIRECT" && c.participants) {
+              for (const p of c.participants) {
+                if (p.userId !== user?.id) {
+                  displayName = p.user.username;
+                  break;
+                }
+              }
+            }
+            return {
+              ...c,
+              _participantMap: participantMap,
+              _displayName: displayName || "Direct Chat"
+            };
+          });
+        setChats(processedChats);
       }
     } catch (err) {
       console.error("Failed to fetch chats for forwarding", err);
@@ -109,11 +134,7 @@ export function ForwardModal({
   };
 
   const filteredChats = chats.filter((c) => {
-    const name =
-      c.type === "DIRECT"
-        ? c.participants.find((p: any) => p.userId !== user?.id)?.user.username
-        : c.name;
-    return name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return c._displayName?.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   if (!isOpen) return null;
@@ -154,11 +175,6 @@ export function ForwardModal({
               </div>
             ) : filteredChats.length > 0 ? (
               filteredChats.map((chat) => {
-                const name =
-                  chat.type === "DIRECT"
-                    ? chat.participants.find((p: any) => p.userId !== user?.id)
-                        ?.user.username
-                    : chat.name;
                 const isSelected = selectedChatIds.has(chat.id);
 
                 return (
@@ -167,9 +183,9 @@ export function ForwardModal({
                     onClick={() => toggleChat(chat.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isSelected ? "bg-[#00ff82]/10 border border-[#00ff82]/30" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
                   >
-                    <Avatar name={name} size="sm" />
+                    <Avatar name={chat._displayName} size="sm" />
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold">{name}</p>
+                      <p className="text-sm font-semibold">{chat._displayName}</p>
                       <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
                         {chat.type}
                       </p>

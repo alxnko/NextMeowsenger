@@ -1,0 +1,3 @@
+## 2025-03-16 - Prevent O(N) Lookups in Render Loops
+**Learning:** React render loops within `ChatWindow.tsx`, `ForwardModal.tsx`, and `Sidebar.tsx` routinely evaluated `messages.find()` and `participants.find()` which scales poorly (O(N*M)) as chats and participants increase. `ChatWindow` already had `Map` caches via `useMemo` that weren't utilized correctly, and component state setups failed to resolve IDs upfront.
+**Action:** Replace `O(N)` `.find()` array methods with O(1) `Map` lookups during rendering. Additionally, for network fetches like fetching user chats, pre-resolve contextual display names (`chat._displayName`, `chat._lastSenderName`) during parsing rather than inline during `map` operations in hot paths.

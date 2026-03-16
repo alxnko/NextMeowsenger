@@ -450,7 +450,7 @@ export function NewChatModal({
                         value={channelSlug}
                         onChange={(e) => {
                           // Clean and format slug: lowercase, alphanumeric and hyphens only, no consecutive hyphens
-                          let slug = e.target.value
+                          const slug = e.target.value
                             .toLowerCase()
                             .replace(/[^a-z0-9-]/g, "")
                             .replace(/--+/g, "-")
