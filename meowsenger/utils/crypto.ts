@@ -178,15 +178,23 @@ export async function encryptChatMessage(
 
   // 3. Encrypt AES key with each recipient's RSA public key (Key Wrapping)
   const exportedAesKey = await window.crypto.subtle.exportKey("raw", aesKey);
-  const keys: Record<string, string> = {};
 
-  for (const recipient of recipientPublicKeys) {
+  const encryptionPromises = recipientPublicKeys.map(async (recipient) => {
     const encryptedKey = await window.crypto.subtle.encrypt(
       { name: "RSA-OAEP" },
       recipient.key,
       exportedAesKey,
     );
-    keys[recipient.userId] = await arrayBufferToBase64(encryptedKey);
+    return {
+      userId: recipient.userId,
+      encryptedKeyBase64: await arrayBufferToBase64(encryptedKey),
+    };
+  });
+
+  const results = await Promise.all(encryptionPromises);
+  const keys: Record<string, string> = {};
+  for (const res of results) {
+    keys[res.userId] = res.encryptedKeyBase64;
   }
 
   return {
