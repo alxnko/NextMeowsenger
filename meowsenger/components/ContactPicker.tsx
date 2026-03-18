@@ -42,6 +42,7 @@ interface ContactItemProps {
 const ContactItem = React.memo(({ contact, isSelected, onToggle, index }: ContactItemProps) => {
   return (
     <button
+      aria-pressed={isSelected}
       onClick={() => onToggle(contact.id)}
       className={cn(
         "w-full flex items-center justify-between gap-3 p-3 rounded-lg",
