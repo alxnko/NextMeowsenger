@@ -143,15 +143,21 @@ export function ForwardModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
+        aria-hidden="true"
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal Content */}
-      <div className="relative bg-white dark:bg-zinc-950 w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="forward-modal-title"
+        className="relative bg-white dark:bg-zinc-950 w-full max-w-md rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200"
+      >
         <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Forward Messages</h2>
-          <Button size="icon" variant="ghost" onPress={onClose}>
+          <h2 id="forward-modal-title" className="text-lg font-bold">Forward Messages</h2>
+          <Button aria-label="Close forward modal" size="icon" variant="ghost" onPress={onClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -161,6 +167,7 @@ export function ForwardModal({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
             <input
               type="text"
+              aria-label="Search chats"
               placeholder="Search chats..."
               className="w-full bg-zinc-100 dark:bg-zinc-900 border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-[#00ff82]"
               value={searchQuery}
@@ -180,6 +187,7 @@ export function ForwardModal({
                 return (
                   <button
                     key={chat.id}
+                    aria-pressed={isSelected}
                     onClick={() => toggleChat(chat.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${isSelected ? "bg-[#00ff82]/10 border border-[#00ff82]/30" : "hover:bg-zinc-100 dark:hover:bg-zinc-800"}`}
                   >
