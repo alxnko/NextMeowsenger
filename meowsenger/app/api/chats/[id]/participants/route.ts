@@ -81,7 +81,7 @@ export async function POST(
       });
 
       if (!chat?.inviteCode) {
-        inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${generateSecureRandomString(5).toUpperCase()}`;
+        inviteCode = generateSecureRandomString(12);
         await prisma.chat.update({
           where: { id: chatId },
           data: { inviteCode },

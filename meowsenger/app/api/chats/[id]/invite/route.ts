@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { v4 as uuidv4 } from "uuid";
+import { generateSecureRandomString } from "@/lib/utils";
 
 // GET: Get invite code for a chat
 export async function GET(
@@ -58,7 +58,7 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const inviteCode = uuidv4().slice(0, 8); // Short manageable code
+    const inviteCode = generateSecureRandomString(12);
 
     const updatedChat = await prisma.chat.update({
       where: { id: chatId },

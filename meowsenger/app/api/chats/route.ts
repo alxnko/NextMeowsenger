@@ -224,7 +224,7 @@ export async function POST(request: Request) {
     let inviteCode = undefined;
     if (skippedUsers.length > 0) {
       // Generate invite code if users were skipped
-      inviteCode = `INV-${Date.now().toString(36).toUpperCase()}-${generateSecureRandomString(5).toUpperCase()}`;
+      inviteCode = generateSecureRandomString(12);
     }
 
     const chat = await prisma.chat.create({
