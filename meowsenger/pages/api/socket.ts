@@ -79,11 +79,30 @@ export default function SocketHandler(
   io.on("connection", (socket) => {
     const userId = socket.data.userId;
 
-    socket.on("join_room", (roomId) => {
+    socket.on("join_room", async (roomId) => {
       // Security: Only allow joining own user room
       if (roomId.startsWith("user_")) {
         if (roomId !== `user_${userId}`) {
           // Silent fail or warning
+          return;
+        }
+      } else {
+        // Security: Verify user is a participant of the chat room
+        try {
+          const participant = await prisma.chatParticipant.findUnique({
+            where: {
+              userId_chatId: {
+                userId,
+                chatId: roomId,
+              },
+            },
+          });
+          if (!participant) {
+            socket.emit("error", { message: "You are not a member of this chat" });
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to verify chat membership for join_room:", err);
           return;
         }
       }
