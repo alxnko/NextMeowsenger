@@ -14,18 +14,24 @@ export async function POST(
   }
 
   try {
-    const chat = await prisma.chat.findUnique({
-      where: { id: chatId },
-    });
+    // Parallelize independent queries to minimize request latency
+    const [chat, existing, pending] = await Promise.all([
+      prisma.chat.findUnique({
+        where: { id: chatId },
+      }),
+      prisma.chatParticipant.findUnique({
+        where: { userId_chatId: { userId, chatId } },
+      }),
+      prisma.joinRequest.findFirst({
+        where: { userId, chatId, status: "PENDING" },
+      })
+    ]);
 
     if (!chat) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
     }
 
     // Check if valid already
-    const existing = await prisma.chatParticipant.findUnique({
-      where: { userId_chatId: { userId, chatId } },
-    });
     if (existing) {
       return NextResponse.json({
         status: "MEMBER",
@@ -34,9 +40,6 @@ export async function POST(
     }
 
     // Check pending
-    const pending = await prisma.joinRequest.findFirst({
-      where: { userId, chatId, status: "PENDING" },
-    });
     if (pending) {
       return NextResponse.json({
         status: "PENDING",
