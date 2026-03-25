@@ -323,8 +323,10 @@ export function ChatSettingsDrawer({
       </div>
 
       {/* Tabs */}
-      <div className="flex p-1 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex p-1 border-b border-zinc-200 dark:border-zinc-800" role="tablist" aria-label="Settings Sections">
         <button
+          role="tab"
+          aria-selected={activeTab === "members"}
           onClick={() => setActiveTab("members")}
           className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider ${activeTab === "members" ? "text-[#00ff82] border-b-2 border-[#00ff82]" : "text-zinc-500"}`}
         >
@@ -332,6 +334,8 @@ export function ChatSettingsDrawer({
         </button>
         {isAdmin && (
           <button
+            role="tab"
+            aria-selected={activeTab === "requests"}
             onClick={() => setActiveTab("requests")}
             className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider ${activeTab === "requests" ? "text-[#00ff82] border-b-2 border-[#00ff82]" : "text-zinc-500"}`}
           >
@@ -339,6 +343,8 @@ export function ChatSettingsDrawer({
           </button>
         )}
         <button
+          role="tab"
+          aria-selected={activeTab === "settings"}
           onClick={() => setActiveTab("settings")}
           className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider ${activeTab === "settings" ? "text-[#00ff82] border-b-2 border-[#00ff82]" : "text-zinc-500"}`}
         >
