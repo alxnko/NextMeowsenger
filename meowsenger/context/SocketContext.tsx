@@ -38,7 +38,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       socketInstance.on("connect", () => {
-        console.log("Socket Connected:", socketInstance?.id);
         setIsConnected(true);
 
         // Join user room immediately if logged in
@@ -48,7 +47,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       socketInstance.on("disconnect", () => {
-        console.log("Socket Disconnected");
         setIsConnected(false);
       });
 
