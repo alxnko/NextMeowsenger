@@ -111,15 +111,19 @@ export function ForwardModal({
           })),
         );
 
-        // 2. Encrypt and send each message
-        for (const msg of selectedMessages) {
-          const packet = await encryptChatMessage(msg.content, recipientKeys);
-          const encryptedContent = JSON.stringify(packet);
+        // 2. Encrypt all messages for this chat in parallel
+        const packets = await Promise.all(
+          selectedMessages.map((msg) =>
+            encryptChatMessage(msg.content, recipientKeys),
+          ),
+        );
 
+        // 3. Send each encrypted message
+        for (const packet of packets) {
           socket.emit("send_message", {
             chatId,
             senderId: user!.id,
-            content: encryptedContent,
+            content: JSON.stringify(packet),
             isForwarded: true,
             timestamp: new Date().toISOString(),
           });
