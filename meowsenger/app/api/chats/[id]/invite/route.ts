@@ -17,11 +17,20 @@ export async function GET(
   try {
     const chat = await prisma.chat.findUnique({
       where: { id: chatId },
-      select: { inviteCode: true },
+      include: {
+        participants: {
+          where: { userId },
+        },
+      },
     });
 
     if (!chat) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    }
+
+    // Security: Prevent IDOR. User must be a participant to get the invite code.
+    if (chat.participants.length === 0) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({ inviteCode: chat.inviteCode });
