@@ -26,32 +26,38 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initSocket = async () => {
       // 1. Initialize the socket server
+      console.log("[SocketContext] Initializing socket server...");
       await fetch("/api/socket");
 
       // 2. Client-side connection
+      console.log(`[SocketContext] Connecting to socket... User: ${user?.id || 'anonymous'}`);
       socketInstance = io({
         path: "/api/socket_io",
         transports: ["websocket"], // Forces WebSocket only (no polling)
         reconnection: true,
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
+        withCredentials: true, // Ensure cookies are sent
       });
 
       socketInstance.on("connect", () => {
+        console.log("[SocketContext] Socket connected");
         setIsConnected(true);
 
         // Join user room immediately if logged in
         if (user?.id) {
+          console.log(`[SocketContext] Joining user room user_${user.id}`);
           socketInstance?.emit("join_room", `user_${user.id}`);
         }
       });
 
-      socketInstance.on("disconnect", () => {
+      socketInstance.on("disconnect", (reason) => {
+        console.log("[SocketContext] Socket disconnected:", reason);
         setIsConnected(false);
       });
 
       socketInstance.on("connect_error", (err) => {
-        console.error("Socket Connection Error:", err);
+        console.error("Socket Connection Error:", err.message);
         // If websocket fails (e.g. firewall), we might want to fallback,
         // but user specifically requested optimization.
         // We'll keep it strict for now per request.
@@ -64,10 +70,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       if (socketInstance) {
+        console.log("[SocketContext] Disconnecting socket");
         socketInstance.disconnect();
       }
     };
-  }, []); // Run once on mount
+  }, [user?.id]); // Re-init if user changes to ensure fresh connection with right cookies
 
   // Watch for Auth changes to re-join user room if socket exists
   useEffect(() => {

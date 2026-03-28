@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { signToken, verifyToken } from '../lib/auth-utils.ts';
 
 const originalSecret = process.env.JWT_SECRET;
@@ -17,13 +16,13 @@ describe('auth-utils', () => {
     it('should sign a token for a user ID', () => {
       const userId = 'user-123';
       const token = signToken(userId);
-      assert.strictEqual(typeof token, 'string');
-      assert.ok(token.includes('.'));
+      expect(typeof token).toBe('string');
+      expect(token.includes('.')).toBe(true);
 
       const [dataB64] = token.split('.');
       const sessionData = JSON.parse(Buffer.from(dataB64, 'base64').toString());
-      assert.strictEqual(sessionData.userId, userId);
-      assert.ok(new Date(sessionData.expires) > new Date());
+      expect(sessionData.userId).toBe(userId);
+      expect(new Date(sessionData.expires).getTime()).toBeGreaterThan(Date.now());
     });
 
     it('should use provided expiration date', () => {
@@ -32,12 +31,12 @@ describe('auth-utils', () => {
       const token = signToken(userId, expires);
       const [dataB64] = token.split('.');
       const sessionData = JSON.parse(Buffer.from(dataB64, 'base64').toString());
-      assert.strictEqual(sessionData.expires, expires.toISOString());
+      expect(sessionData.expires).toBe(expires.toISOString());
     });
 
     it('should throw error if JWT_SECRET is not defined', () => {
       delete process.env.JWT_SECRET;
-      assert.throws(() => signToken('user-123'), /JWT_SECRET environment variable is not defined/);
+      expect(() => signToken('user-123')).toThrow(/JWT_SECRET environment variable is not defined/);
     });
   });
 
@@ -46,8 +45,8 @@ describe('auth-utils', () => {
       const userId = 'user-123';
       const token = signToken(userId);
       const result = verifyToken(token);
-      assert.ok(result);
-      assert.strictEqual(result!.userId, userId);
+      expect(result).not.toBeNull();
+      expect(result?.userId).toBe(userId);
     });
 
     it('should return null for expired tokens', () => {
@@ -55,7 +54,7 @@ describe('auth-utils', () => {
       const expires = new Date(Date.now() - 10000);
       const token = signToken(userId, expires);
       const result = verifyToken(token);
-      assert.strictEqual(result, null);
+      expect(result).toBeNull();
     });
 
     it('should return null for invalid signature', () => {
@@ -65,12 +64,12 @@ describe('auth-utils', () => {
       // Tamper with signature
       const invalidToken = `${data}.${signature.substring(0, signature.length - 1)}${signature.endsWith('0') ? '1' : '0'}`;
       const result = verifyToken(invalidToken);
-      assert.strictEqual(result, null);
+      expect(result).toBeNull();
     });
 
     it('should return null for malformed tokens', () => {
-      assert.strictEqual(verifyToken('not-a-token'), null);
-      assert.strictEqual(verifyToken(''), null);
+      expect(verifyToken('not-a-token')).toBeNull();
+      expect(verifyToken('')).toBeNull();
     });
 
     it('should return null if JWT_SECRET is not defined', () => {
@@ -78,7 +77,7 @@ describe('auth-utils', () => {
       const token = signToken(userId);
       delete process.env.JWT_SECRET;
       const result = verifyToken(token);
-      assert.strictEqual(result, null);
+      expect(result).toBeNull();
     });
 
     it('should return null if JWT_SECRET changes', () => {
@@ -86,7 +85,7 @@ describe('auth-utils', () => {
       const token = signToken(userId);
       process.env.JWT_SECRET = 'different-secret';
       const result = verifyToken(token);
-      assert.strictEqual(result, null);
+      expect(result).toBeNull();
     });
   });
 });

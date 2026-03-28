@@ -14,6 +14,7 @@ import { useSocket } from "@/hooks/useSocket";
 import { siteConfig } from "@/lib/site-config";
 import { ChatListSkeleton } from "./ChatListSkeleton";
 import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useRef } from "react";
 
 export function Sidebar() {
   const { user, logout, privateKey } = useAuth();
@@ -28,57 +29,10 @@ export function Sidebar() {
   const onOpen = () => setIsOpen(true);
   const onOpenChange = (val: boolean) => setIsOpen(val);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (user && privateKey) {
-      fetchChats(controller.signal);
-    }
-    return () => controller.abort();
-  }, [user, privateKey]);
-
-  useEffect(() => {
-    if (socket && isConnected && user) {
-      socket.emit("join_room", `user_${user.id}`);
-
-      const handleNewChat = (data: any) => {
-        // Simple debounce: wait 500ms, if called again, reset timer
-        if ((window as any).refreshTimeout) {
-          clearTimeout((window as any).refreshTimeout);
-        }
-        (window as any).refreshTimeout = setTimeout(() => {
-          fetchChats();
-        }, 500);
-      };
-
-      const handleRefreshChats = (data: any) => {
-        if (data.chatId && data.lastReadAt) {
-          setChats((prev) =>
-            prev.map((c) =>
-              c.id === data.chatId ? { ...c, lastReadAt: data.lastReadAt } : c,
-            ),
-          );
-        } else {
-          handleNewChat(data);
-        }
-      };
-
-      socket.on("new_chat", handleNewChat);
-      socket.on("refresh_chats", handleRefreshChats);
-      socket.on("receive_message", handleNewChat);
-
-      return () => {
-        socket.off("new_chat", handleNewChat);
-        socket.off("refresh_chats", handleRefreshChats);
-        socket.off("receive_message", handleNewChat);
-        if ((window as any).refreshTimeout) {
-          clearTimeout((window as any).refreshTimeout);
-        }
-      };
-    }
-  }, [socket, isConnected, user]);
-
-  const fetchChats = async (signal?: AbortSignal) => {
+  const fetchChats = useCallback(async (signal?: AbortSignal) => {
+    if (!user || !privateKey) return;
     try {
+      console.log("[Sidebar] Fetching chats...");
       const res = await fetch("/api/chats", {
         headers: { "x-user-id": user?.id || "" },
         signal,
@@ -136,6 +90,7 @@ export function Sidebar() {
         }),
       );
 
+      console.log(`[Sidebar] Fetched ${decryptedChats.length} chats`);
       setChats(decryptedChats);
     } catch (err: any) {
       if (err.name !== "AbortError") {
@@ -144,7 +99,62 @@ export function Sidebar() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  };
+  }, [user, privateKey]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchChats(controller.signal);
+    return () => controller.abort();
+  }, [fetchChats]);
+
+  // Use a ref to always have access to the latest fetchChats and state without re-attaching listeners
+  const handlersRef = useRef({ fetchChats, setChats });
+  handlersRef.current = { fetchChats, setChats };
+
+  useEffect(() => {
+    if (socket && isConnected && user) {
+      console.log("[Sidebar] Setting up socket listeners");
+      socket.emit("join_room", `user_${user.id}`);
+
+      const handleNewChat = (data: any) => {
+        console.log("[Sidebar] Received new_chat or message event", data);
+        // Simple debounce: wait 500ms, if called again, reset timer
+        if ((window as any).refreshTimeout) {
+          clearTimeout((window as any).refreshTimeout);
+        }
+        (window as any).refreshTimeout = setTimeout(() => {
+          handlersRef.current.fetchChats();
+        }, 500);
+      };
+
+      const handleRefreshChats = (data: any) => {
+        console.log("[Sidebar] Received refresh_chats event", data);
+        if (data.chatId && data.lastReadAt) {
+          handlersRef.current.setChats((prev) =>
+            prev.map((c) =>
+              c.id === data.chatId ? { ...c, lastReadAt: data.lastReadAt } : c,
+            ),
+          );
+        } else {
+          handleNewChat(data);
+        }
+      };
+
+      socket.on("new_chat", handleNewChat);
+      socket.on("refresh_chats", handleRefreshChats);
+      socket.on("receive_message", handleNewChat);
+
+      return () => {
+        console.log("[Sidebar] Cleaning up socket listeners");
+        socket.off("new_chat", handleNewChat);
+        socket.off("refresh_chats", handleRefreshChats);
+        socket.off("receive_message", handleNewChat);
+        if ((window as any).refreshTimeout) {
+          clearTimeout((window as any).refreshTimeout);
+        }
+      };
+    }
+  }, [socket, isConnected, user?.id]); // Only re-run if socket or user.id changes
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-black">

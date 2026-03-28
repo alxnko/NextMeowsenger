@@ -1,34 +1,33 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 import { cn, generateSecureRandomString } from '../lib/utils.ts';
 
 describe('cn utility', () => {
   it('combines multiple class names', () => {
-    assert.strictEqual(cn('foo', 'bar'), 'foo bar');
+    expect(cn('foo', 'bar')).toBe('foo bar');
   });
 
   it('handles conditional class names', () => {
-    assert.strictEqual(cn('foo', true && 'bar', false && 'baz'), 'foo bar');
+    expect(cn('foo', true && 'bar', false && 'baz')).toBe('foo bar');
   });
 
   it('filters out falsy values', () => {
-    assert.strictEqual(cn('foo', null, undefined, 0, false, ''), 'foo');
+    expect(cn('foo', null, undefined, 0, false, '')).toBe('foo');
   });
 
   it('handles mixed inputs', () => {
-    assert.strictEqual(cn('foo', 'bar', null, 'baz'), 'foo bar baz');
+    expect(cn('foo', 'bar', null, 'baz')).toBe('foo bar baz');
   });
 
   it('returns empty string for empty input', () => {
-    assert.strictEqual(cn(), '');
+    expect(cn()).toBe('');
   });
 
   it('handles only falsy values', () => {
-    assert.strictEqual(cn(false, null, undefined, ''), '');
+    expect(cn(false, null, undefined, '')).toBe('');
   });
 
   it('handles a single truthy value', () => {
-    assert.strictEqual(cn('single'), 'single');
+    expect(cn('single')).toBe('single');
   });
 });
 
@@ -36,24 +35,24 @@ describe('generateSecureRandomString', () => {
   it('generates string of correct length', () => {
     const length = 10;
     const result = generateSecureRandomString(length);
-    assert.strictEqual(result.length, length);
+    expect(result.length).toBe(length);
   });
 
   it('generates string of length 0', () => {
     const result = generateSecureRandomString(0);
-    assert.strictEqual(result.length, 0);
-    assert.strictEqual(result, '');
+    expect(result.length).toBe(0);
+    expect(result).toBe('');
   });
 
   it('generates different strings on subsequent calls', () => {
     const result1 = generateSecureRandomString(10);
     const result2 = generateSecureRandomString(10);
-    assert.notStrictEqual(result1, result2);
+    expect(result1).not.toBe(result2);
   });
 
   it('contains only alphanumeric characters', () => {
     const result = generateSecureRandomString(100);
-    assert.match(result, /^[a-zA-Z0-9]+$/);
+    expect(result).toMatch(/^[a-zA-Z0-9]+$/);
   });
 
   it('uses characters from the entire alphanumeric charset', () => {
@@ -61,7 +60,7 @@ describe('generateSecureRandomString', () => {
     const result = generateSecureRandomString(1000);
     const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     for (const char of result) {
-      assert.ok(charset.includes(char), `Character ${char} is not in the alphanumeric charset`);
+      expect(charset.includes(char)).toBe(true);
     }
   });
 });

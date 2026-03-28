@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import type { Server as HTTPServer } from "http";
 import type { Socket as NetSocket } from "net";
 import { prisma } from "../../lib/prisma";
-import { verifyToken } from "../../lib/auth";
+import { verifySession } from "../../lib/session";
 
 interface SocketServer extends HTTPServer {
   io?: Server | undefined;
@@ -20,8 +20,13 @@ interface NextApiResponseWithSocket extends NextApiResponse {
 function parseCookies(req: any) {
   const list: any = Object.create(null);
   const rc = req.headers.cookie;
+  
+  if (!rc) {
+    console.log("[parseCookies] No cookies found in request headers");
+    return list;
+  }
 
-  rc && rc.split(';').forEach(function(cookie: string) {
+  rc.split(';').forEach(function(cookie: string) {
     const parts = cookie.split('=');
     const key = parts.shift()?.trim();
     if (!key) return;
@@ -29,6 +34,7 @@ function parseCookies(req: any) {
     list[key] = value;
   });
 
+  console.log(`[parseCookies] Keys found: ${Object.keys(list).join(', ')}`);
   return list;
 }
 
@@ -52,24 +58,32 @@ export default function SocketHandler(
   });
 
   // Authentication Middleware
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const cookies = parseCookies(socket.request);
-      const token = cookies.auth_token;
+      // Client uses 'session_token'
+      const token = cookies.session_token;
+      
+      console.log(`[Socket Auth] Cookie string length: ${socket.request.headers.cookie?.length || 0}`);
+      console.log(`[Socket Auth] Token present: ${!!token}`);
 
       if (!token) {
+        console.warn("[Socket Auth Warning] Token missing from cookies");
         return next(new Error("Authentication error: Token missing"));
       }
 
-      const session = verifyToken(token);
-      if (!session) {
+      const userId = await verifySession(token);
+      if (!userId) {
+        console.warn("[Socket Auth Warning] Invalid token provided");
         return next(new Error("Authentication error: Invalid token"));
       }
 
       // Attach user ID to socket data
-      socket.data.userId = session.userId;
+      socket.data.userId = userId;
+      console.log(`[Socket Auth Success] Authenticated user: ${userId}`);
       next();
     } catch (err) {
+      console.error("[Socket Auth Error]", err);
       next(new Error("Authentication error"));
     }
   });
@@ -119,6 +133,7 @@ export default function SocketHandler(
         tempId?: string;
       }) => {
         try {
+          console.log(`[Socket] send_message received for chat ${data.chatId} from user ${userId}`);
           // Use authenticated userId
           const senderId = userId;
 
@@ -133,6 +148,7 @@ export default function SocketHandler(
           });
 
           if (!chat) {
+            console.log(`[Socket] Chat ${data.chatId} not found`);
             socket.emit("error", { message: "Chat not found" });
             return;
           }
@@ -140,6 +156,7 @@ export default function SocketHandler(
           // Verify membership (implicitly done by include participants where userId)
           const senderParticipant = chat.participants[0];
           if (!senderParticipant) {
+             console.log(`[Socket] User ${senderId} is not a member of chat ${data.chatId}`);
              socket.emit("error", { message: "You are not a member of this chat" });
              return;
           }
@@ -150,6 +167,7 @@ export default function SocketHandler(
               senderParticipant.role !== "ADMIN" &&
               senderParticipant.role !== "OWNER"
             ) {
+              console.log(`[Socket] User ${senderId} is not an admin in channel ${data.chatId}`);
               socket.emit("error", {
                 message: "Only admins can send messages in channels",
               });
@@ -158,6 +176,7 @@ export default function SocketHandler(
           }
 
           const now = new Date();
+          console.log(`[Socket] Creating message in DB for chat ${data.chatId}...`);
           const message = await prisma.message.create({
             data: {
               chatId: data.chatId,
@@ -171,6 +190,7 @@ export default function SocketHandler(
               replyTo: true,
             },
           });
+          console.log(`[Socket] Message created with ID: ${message.id}`);
 
           await prisma.chat.update({
             where: { id: data.chatId },
@@ -200,6 +220,7 @@ export default function SocketHandler(
             },
           });
 
+          console.log(`[Socket] Broadcasting message to chat room ${data.chatId}`);
           io.to(data.chatId).emit("receive_message", {
             ...data,
             senderId, // Ensure senderId is correct
@@ -211,15 +232,15 @@ export default function SocketHandler(
             where: { chatId: data.chatId },
           });
 
+          console.log(`[Socket] Notifying ${participants.length} participants to refresh sidebars`);
           participants.forEach((p: any) => {
-            if (p.userId !== senderId) {
-              io.to(`user_${p.userId}`).emit("refresh_chats", {
-                chatId: data.chatId,
-              });
-            }
+            io.to(`user_${p.userId}`).emit("refresh_chats", {
+              chatId: data.chatId,
+            });
           });
         } catch (err) {
-          console.error("Failed to process message:", err);
+          console.error("[Socket] Failed to process message:", err);
+          socket.emit("error", { message: "Internal server error while sending message" });
         }
       },
     );
@@ -317,6 +338,7 @@ export default function SocketHandler(
     socket.on(
       "notify_new_chat",
       async (data: { chat: any }) => {
+        console.log(`[Socket] notify_new_chat received from user ${userId} for chat ${data.chat?.id}`);
         // Secure notification: Only notify actual participants if sender is one of them
         try {
           const chatId = data.chat?.id;
@@ -327,16 +349,20 @@ export default function SocketHandler(
             include: { participants: true }
           });
 
-          if (!chat) return;
+          if (!chat) {
+            console.log(`[Socket] Chat ${chatId} not found in DB`);
+            return;
+          }
 
           const isSenderParticipant = chat.participants.some(p => p.userId === userId);
-          if (!isSenderParticipant) return;
+          if (!isSenderParticipant) {
+            console.log(`[Socket] User ${userId} is not a participant of chat ${chatId}`);
+            return;
+          }
 
+          console.log(`[Socket] Notifying ${chat.participants.length} participants of new chat ${chatId}`);
           chat.participants.forEach((p) => {
-             // Don't notify self? The client might need it?
-             // Sidebar.tsx logic: if (data.chatId && data.lastReadAt) -> refresh
-             // else -> handleNewChat.
-             // Usually sender knows about new chat. But other tabs might not.
+             console.log(`[Socket] Emitting new_chat to user_${p.userId}`);
              io.to(`user_${p.userId}`).emit("new_chat", data.chat);
           });
 

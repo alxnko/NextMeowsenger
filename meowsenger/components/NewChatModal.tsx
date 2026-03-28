@@ -139,6 +139,10 @@ export function NewChatModal({
 
       // Notify participants via socket
       if (socket) {
+        console.log("[NewChatModal] Emitting notify_new_chat", {
+          participantIds,
+          chatId: data.chat.id,
+        });
         socket.emit("notify_new_chat", {
           participantIds,
           chat: data.chat,
@@ -180,6 +184,10 @@ export function NewChatModal({
 
       // Notify via socket
       if (socket) {
+        console.log("[NewChatModal] Emitting notify_new_chat", {
+          participantIds,
+          chatId: data.chat.id,
+        });
         socket.emit("notify_new_chat", {
           participantIds,
           chat: data.chat,
@@ -266,6 +274,9 @@ export function NewChatModal({
       if (socket) {
         // For channels, logic is we are the only participant initially
         // We need to notify ourselves (and potentially others if we had a way to invite them immediately, but for now just us)
+        console.log("[NewChatModal] Emitting notify_new_chat for channel", {
+          chatId: data.chat.id,
+        });
         socket.emit("notify_new_chat", {
           participantIds: [currentUser?.id], // Only notify creator for now
           chat: data.chat,

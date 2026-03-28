@@ -1,5 +1,4 @@
-import test from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 
 // Implementation from meowsenger/pages/api/socket.ts
 function parseCookies(req: any) {
@@ -17,37 +16,39 @@ function parseCookies(req: any) {
   return list;
 }
 
-test('parseCookies - Security Verification', () => {
-  const req = {
-    headers: {
-      cookie: '__proto__=polluted; normal=value; auth_token=secret'
-    }
-  };
+describe('socket-security', () => {
+  it('parseCookies - Security Verification', () => {
+    const req = {
+      headers: {
+        cookie: '__proto__=polluted; normal=value; session_token=secret'
+      }
+    };
 
-  const cookies = parseCookies(req);
+    const cookies = parseCookies(req);
 
-  // Normal functionality
-  assert.strictEqual(cookies.normal, 'value');
-  assert.strictEqual(cookies.auth_token, 'secret');
+    // Normal functionality
+    expect(cookies.normal).toBe('value');
+    expect(cookies.session_token).toBe('secret');
 
-  // Security check: Object.create(null) doesn't have a __proto__ setter on itself
-  // that reaches Object.prototype.
-  // Setting it just creates a property named "__proto__" on the null-prototype object.
-  assert.strictEqual(cookies['__proto__'], 'polluted');
+    // Security check: Object.create(null) doesn't have a __proto__ setter on itself
+    // that reaches Object.prototype.
+    // Setting it just creates a property named "__proto__" on the null-prototype object.
+    expect(cookies['__proto__']).toBe('polluted');
 
-  // Verify it's truly a null-prototype object
-  assert.strictEqual(Object.getPrototypeOf(cookies), null);
+    // Verify it's truly a null-prototype object
+    expect(Object.getPrototypeOf(cookies)).toBeNull();
 
-  // Verify global Object.prototype is NOT polluted
-  // (Using a property name that's unlikely to exist elsewhere)
-  const testObj: any = {};
-  assert.strictEqual(testObj['polluted'], undefined);
-});
+    // Verify global Object.prototype is NOT polluted
+    // (Using a property name that's unlikely to exist elsewhere)
+    const testObj: any = {};
+    expect(testObj['polluted']).toBeUndefined();
+  });
 
-test('parseCookies - Edge cases', () => {
-  assert.deepStrictEqual(parseCookies({ headers: {} }), Object.create(null));
-  assert.deepStrictEqual(parseCookies({ headers: { cookie: '' } }), Object.create(null));
+  it('parseCookies - Edge cases', () => {
+    expect(parseCookies({ headers: {} })).toEqual(Object.create(null));
+    expect(parseCookies({ headers: { cookie: '' } })).toEqual(Object.create(null));
 
-  const single = parseCookies({ headers: { cookie: 'a=b' } });
-  assert.strictEqual(single.a, 'b');
+    const single = parseCookies({ headers: { cookie: 'a=b' } });
+    expect(single.a).toBe('b');
+  });
 });

@@ -129,21 +129,25 @@ export function ChatWindow({ chatId }: { chatId: string }) {
   const fetchChatDetails = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
+      console.log(`[ChatWindow] Fetching details for chat ${chatId}...`);
       const res = await fetch(`/api/chats/${chatId}`, {
         headers: { "x-user-id": user?.id || "" },
         signal,
       });
       const data = await res.json();
       if (data.chat) {
+        console.log(`[ChatWindow] Chat details received. Messages in response: ${data.chat.messages?.length || 0}`);
         setChatDetails(data.chat);
 
         if (data.chat.messages && privateKey) {
+          console.log(`[ChatWindow] Decrypting ${data.chat.messages.length} messages...`);
           const reversed = [...data.chat.messages].reverse();
           const decryptedMessages = await Promise.all(
             reversed.map((m: any) =>
               decryptMessageItem(m, privateKey, user!.id),
             ),
           );
+          console.log(`[ChatWindow] Successfully decrypted ${decryptedMessages.filter(m => !m.isError).length} messages.`);
           setMessages(decryptedMessages);
           setTimeout(scrollToBottom, 50);
         }
@@ -183,6 +187,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
         isEdited: m.isEdited,
       };
     } catch (e) {
+      console.error(`[ChatWindow] Failed to decrypt message ${m.id}:`, e);
       return {
         id: m.id,
         senderId: m.senderId,
