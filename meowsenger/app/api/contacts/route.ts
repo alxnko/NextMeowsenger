@@ -10,19 +10,17 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Find all chats where the user is a participant
-    const myChats = await prisma.chatParticipant.findMany({
-      where: { userId },
-      select: { chatId: true },
-    });
-
-    const chatIds = myChats.map((c) => c.chatId);
-
-    // Find all other participants in those chats
+    // ⚡ Bolt: Replaced sequential database lookups (fetching chat IDs then fetching contacts)
+    // with a single optimized query using a relation filter. This avoids application-side
+    // joins and reduces database roundtrips.
     const contacts = await prisma.chatParticipant.findMany({
       where: {
-        chatId: { in: chatIds },
         userId: { not: userId }, // Exclude self
+        chat: {
+          participants: {
+            some: { userId }, // Only chats where the current user is a participant
+          },
+        },
       },
       select: {
         user: {
