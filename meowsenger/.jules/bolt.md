@@ -1,3 +1,7 @@
 ## 2025-03-16 - Prevent O(N) Lookups in Render Loops
 **Learning:** React render loops within `ChatWindow.tsx`, `ForwardModal.tsx`, and `Sidebar.tsx` routinely evaluated `messages.find()` and `participants.find()` which scales poorly (O(N*M)) as chats and participants increase. `ChatWindow` already had `Map` caches via `useMemo` that weren't utilized correctly, and component state setups failed to resolve IDs upfront.
 **Action:** Replace `O(N)` `.find()` array methods with O(1) `Map` lookups during rendering. Additionally, for network fetches like fetching user chats, pre-resolve contextual display names (`chat._displayName`, `chat._lastSenderName`) during parsing rather than inline during `map` operations in hot paths.
+
+## 2025-05-14 - Optimizing String Building in V8
+**Learning:** For cryptographic string generation (like `generateSecureRandomString`), using an array-based builder (pre-allocating `new Array(length)` and using `.join('')`) is a recognized pattern for optimizing performance in V8 environments by avoiding repeated string copies. However, for short strings (length < 1000) in current V8 versions, simple concatenation can actually be faster or comparable. Additionally, when using `crypto.getRandomValues`, `Uint32Array` should be preferred over `Uint8Array` for charsets like alphanumeric (62 chars) to minimize modulo bias.
+**Action:** Use array builders for repetitive string building in loops where performance is critical. Always use `Uint32Array` for random indices to ensure high entropy and minimal statistical bias.
