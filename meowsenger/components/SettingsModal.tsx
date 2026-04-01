@@ -238,22 +238,32 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </span>
                       </div>
                       {copied ? (
-                        <span className="text-[#00ff82] animate-pulse text-[10px]">
+                        <span className="text-[#00ff82] animate-pulse text-[10px]" aria-live="polite">
                           ✓ COPIED
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={copyKey}
-                          className="hover:text-[#00ff82] transition-all duration-200 cursor-pointer text-[10px] hover:scale-105"
+                          aria-label="Copy public identity key"
+                          className="hover:text-[#00ff82] transition-all duration-200 cursor-pointer text-[10px] hover:scale-105 focus-visible:ring-2 focus-visible:ring-[#00ff82] focus-visible:outline-none rounded"
                         >
                           COPY
                         </button>
                       )}
                     </label>
                     <div
-                      className="p-4 bg-zinc-950 rounded-lg border border-zinc-800 font-mono text-[10px] break-all text-zinc-400 select-all shadow-inner h-24 overflow-y-auto custom-scrollbar relative group cursor-pointer hover:border-zinc-700 transition-colors"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Copy public identity key"
+                      className="p-4 bg-zinc-950 rounded-lg border border-zinc-800 font-mono text-[10px] break-all text-zinc-400 select-all shadow-inner h-24 overflow-y-auto custom-scrollbar relative group cursor-pointer hover:border-zinc-700 transition-colors focus-visible:ring-2 focus-visible:ring-[#00ff82] focus-visible:outline-none"
                       onClick={copyKey}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          copyKey();
+                        }
+                      }}
                     >
                       {user?.publicKey || "UNKNOWN_KEY"}
                       <div className="absolute inset-0 pointer-events-none bg-linear-to-b from-transparent via-transparent to-black/20" />
