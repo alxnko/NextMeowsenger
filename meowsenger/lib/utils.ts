@@ -12,13 +12,13 @@ export function cn(...inputs: any[]) {
 export function generateSecureRandomString(length: number): string {
   const charset =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
   const values = new Uint32Array(length);
   crypto.getRandomValues(values);
 
+  const result = new Array(length);
   for (let i = 0; i < length; i++) {
-    result += charset[values[i] % charset.length];
+    result[i] = charset[values[i] % charset.length];
   }
 
-  return result;
+  return result.join("");
 }
