@@ -29,7 +29,7 @@ function parseCookies(req: any) {
   rc.split(';').forEach(function(cookie: string) {
     const parts = cookie.split('=');
     const key = parts.shift()?.trim();
-    if (!key) return;
+    if (!key || key === '__proto__' || key === 'constructor' || key === 'prototype') return;
     const value = decodeURIComponent(parts.join('='));
     list[key] = value;
   });

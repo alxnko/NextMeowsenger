@@ -8,7 +8,7 @@ function parseCookies(req: any) {
   rc && rc.split(';').forEach(function(cookie: string) {
     const parts = cookie.split('=');
     const key = parts.shift()?.trim();
-    if (!key) return;
+    if (!key || key === '__proto__' || key === 'constructor' || key === 'prototype') return;
     const value = decodeURIComponent(parts.join('='));
     list[key] = value;
   });
@@ -20,7 +20,7 @@ describe('socket-security', () => {
   it('parseCookies - Security Verification', () => {
     const req = {
       headers: {
-        cookie: '__proto__=polluted; normal=value; session_token=secret'
+        cookie: '__proto__=polluted; constructor=polluted; prototype=polluted; normal=value; session_token=secret'
       }
     };
 
@@ -30,16 +30,15 @@ describe('socket-security', () => {
     expect(cookies.normal).toBe('value');
     expect(cookies.session_token).toBe('secret');
 
-    // Security check: Object.create(null) doesn't have a __proto__ setter on itself
-    // that reaches Object.prototype.
-    // Setting it just creates a property named "__proto__" on the null-prototype object.
-    expect(cookies['__proto__']).toBe('polluted');
+    // Security check: Blocked keys should not be present
+    expect(cookies['__proto__']).toBeUndefined();
+    expect(cookies['constructor']).toBeUndefined();
+    expect(cookies['prototype']).toBeUndefined();
 
     // Verify it's truly a null-prototype object
     expect(Object.getPrototypeOf(cookies)).toBeNull();
 
     // Verify global Object.prototype is NOT polluted
-    // (Using a property name that's unlikely to exist elsewhere)
     const testObj: any = {};
     expect(testObj['polluted']).toBeUndefined();
   });
