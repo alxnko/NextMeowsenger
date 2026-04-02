@@ -32,7 +32,6 @@ export function Sidebar() {
   const fetchChats = useCallback(async (signal?: AbortSignal) => {
     if (!user || !privateKey) return;
     try {
-      console.log("[Sidebar] Fetching chats...");
       const res = await fetch("/api/chats", {
         headers: { "x-user-id": user?.id || "" },
         signal,
@@ -90,7 +89,6 @@ export function Sidebar() {
         }),
       );
 
-      console.log(`[Sidebar] Fetched ${decryptedChats.length} chats`);
       setChats(decryptedChats);
     } catch (err: any) {
       if (err.name !== "AbortError") {
@@ -113,11 +111,9 @@ export function Sidebar() {
 
   useEffect(() => {
     if (socket && isConnected && user) {
-      console.log("[Sidebar] Setting up socket listeners");
       socket.emit("join_room", `user_${user.id}`);
 
       const handleNewChat = (data: any) => {
-        console.log("[Sidebar] Received new_chat or message event", data);
         // Simple debounce: wait 500ms, if called again, reset timer
         if ((window as any).refreshTimeout) {
           clearTimeout((window as any).refreshTimeout);
@@ -128,7 +124,6 @@ export function Sidebar() {
       };
 
       const handleRefreshChats = (data: any) => {
-        console.log("[Sidebar] Received refresh_chats event", data);
         if (data.chatId && data.lastReadAt) {
           handlersRef.current.setChats((prev) =>
             prev.map((c) =>
@@ -145,7 +140,6 @@ export function Sidebar() {
       socket.on("receive_message", handleNewChat);
 
       return () => {
-        console.log("[Sidebar] Cleaning up socket listeners");
         socket.off("new_chat", handleNewChat);
         socket.off("refresh_chats", handleRefreshChats);
         socket.off("receive_message", handleNewChat);
