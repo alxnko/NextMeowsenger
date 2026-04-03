@@ -172,6 +172,10 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid Request" }, { status: 400 });
   }
 
+  if (role !== "ADMIN" && role !== "MEMBER") {
+    return NextResponse.json({ error: "Invalid Role" }, { status: 400 });
+  }
+
   try {
     // 1. Check Requester Permissions (Must be ADMIN or OWNER)
     const requester = await prisma.chatParticipant.findUnique({
@@ -183,6 +187,32 @@ export async function PUT(
       (requester.role !== "ADMIN" && requester.role !== "OWNER")
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // 2. Fetch target participant to prevent demoting owner or unauthorized modifications
+    const targetParticipant = await prisma.chatParticipant.findUnique({
+      where: { userId_chatId: { userId: targetUserId, chatId } },
+    });
+
+    if (!targetParticipant) {
+      return NextResponse.json(
+        { error: "Target participant not found" },
+        { status: 404 },
+      );
+    }
+
+    if (targetParticipant.role === "OWNER") {
+      return NextResponse.json(
+        { error: "Cannot modify owner role" },
+        { status: 403 },
+      );
+    }
+
+    if (targetParticipant.role === "ADMIN" && requester.role !== "OWNER") {
+      return NextResponse.json(
+        { error: "Only the owner can demote an admin" },
+        { status: 403 },
+      );
     }
 
     // 3. Update Target Role
