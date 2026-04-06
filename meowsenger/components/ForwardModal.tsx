@@ -96,39 +96,44 @@ export function ForwardModal({
     setIsSending(true);
 
     try {
-      for (const chatId of Array.from(selectedChatIds)) {
-        // 1. Fetch full chat details to get participants and keys
-        const res = await fetch(`/api/chats/${chatId}`, {
-          headers: { "x-user-id": user!.id },
-        });
-        const { chat } = await res.json();
-        if (!chat) continue;
-
-        const recipientKeys = await Promise.all(
-          chat.participants.map(async (p: any) => ({
-            userId: p.userId,
-            key: await importPublicKey(p.user.publicKey),
-          })),
-        );
-
-        // 2. Encrypt all messages for this chat in parallel
-        const packets = await Promise.all(
-          selectedMessages.map((msg) =>
-            encryptChatMessage(msg.content, recipientKeys),
-          ),
-        );
-
-        // 3. Send each encrypted message
-        for (const packet of packets) {
-          socket.emit("send_message", {
-            chatId,
-            senderId: user!.id,
-            content: JSON.stringify(packet),
-            isForwarded: true,
-            timestamp: new Date().toISOString(),
+      // ⚡ Bolt: Execute independent chat forwarding operations concurrently.
+      // Parallelizes network requests (fetching public keys) and heavy crypto operations (RSA-OAEP wrapping)
+      // across multiple target chats, significantly reducing overall latency compared to sequential iteration.
+      await Promise.all(
+        Array.from(selectedChatIds).map(async (chatId) => {
+          // 1. Fetch full chat details to get participants and keys
+          const res = await fetch(`/api/chats/${chatId}`, {
+            headers: { "x-user-id": user!.id },
           });
-        }
-      }
+          const { chat } = await res.json();
+          if (!chat) return;
+
+          const recipientKeys = await Promise.all(
+            chat.participants.map(async (p: any) => ({
+              userId: p.userId,
+              key: await importPublicKey(p.user.publicKey),
+            })),
+          );
+
+          // 2. Encrypt all messages for this chat in parallel
+          const packets = await Promise.all(
+            selectedMessages.map((msg) =>
+              encryptChatMessage(msg.content, recipientKeys),
+            ),
+          );
+
+          // 3. Send each encrypted message
+          for (const packet of packets) {
+            socket.emit("send_message", {
+              chatId,
+              senderId: user!.id,
+              content: JSON.stringify(packet),
+              isForwarded: true,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        }),
+      );
       onClose();
     } catch (err) {
       console.error("Forwarding failed", err);
