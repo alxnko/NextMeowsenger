@@ -10,6 +10,10 @@ export function cn(...inputs: any[]) {
  * @returns A random string containing alphanumeric characters.
  */
 export function generateSecureRandomString(length: number): string {
+  if (!Number.isInteger(length) || length < 0) {
+    throw new RangeError("Length must be a non-negative integer");
+  }
+
   const charset =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const values = new Uint32Array(length);

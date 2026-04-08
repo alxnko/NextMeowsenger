@@ -63,4 +63,16 @@ describe('generateSecureRandomString', () => {
       expect(charset.includes(char)).toBe(true);
     }
   });
+
+  it('throws RangeError for negative length', () => {
+    expect(() => generateSecureRandomString(-1)).toThrow(RangeError);
+  });
+
+  it('throws RangeError for extremely large length', () => {
+    expect(() => generateSecureRandomString(10 ** 10)).toThrow(RangeError);
+  });
+
+  it('throws RangeError for non-integer length', () => {
+    expect(() => generateSecureRandomString(5.5)).toThrow(RangeError);
+  });
 });
