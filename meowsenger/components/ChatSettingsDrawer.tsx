@@ -45,6 +45,7 @@ export function ChatSettingsDrawer({
   const [addingMembers, setAddingMembers] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [loadingInvite, setLoadingInvite] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen && activeTab === "requests") {
@@ -223,7 +224,8 @@ export function ChatSettingsDrawer({
     if (!inviteCode) return;
     const link = `${window.location.origin}/join/${inviteCode}`;
     navigator.clipboard.writeText(link);
-    alert("Invite link copied to clipboard!");
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
   };
 
   // derived admin status
@@ -557,8 +559,9 @@ export function ChatSettingsDrawer({
                     size="sm"
                     className="w-full text-[10px] h-8"
                     onPress={copyInviteLink}
+                    aria-live="polite"
                   >
-                    Copy Link
+                    {inviteCopied ? "✓ Copied!" : "Copy Link"}
                   </Button>
                 </div>
               ) : (
