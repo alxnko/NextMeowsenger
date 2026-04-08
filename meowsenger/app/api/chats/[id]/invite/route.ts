@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureRandomString } from "@/lib/utils";
+import { getSession } from "@/lib/auth";
 
 // GET: Get invite code for a chat
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { id: chatId } = await params;
 
   if (!userId) {
@@ -48,7 +50,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { id: chatId } = await params;
 
   if (!userId) {

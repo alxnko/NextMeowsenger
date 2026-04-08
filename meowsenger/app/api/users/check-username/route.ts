@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = searchParams.get("username");
-  const currentUserId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const currentUserId = session?.id;
 
   if (!username) {
     return NextResponse.json({ error: "Username required" }, { status: 400 });
