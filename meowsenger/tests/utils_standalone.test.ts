@@ -46,4 +46,16 @@ test('generateSecureRandomString contains only alphanumeric characters', () => {
   assert.match(result, /^[a-zA-Z0-9]+$/);
 });
 
+test('generateSecureRandomString throws RangeError for negative length', () => {
+  assert.throws(() => generateSecureRandomString(-1), RangeError);
+});
+
+test('generateSecureRandomString throws RangeError for extremely large length', () => {
+  assert.throws(() => generateSecureRandomString(10 ** 10), RangeError);
+});
+
+test('generateSecureRandomString throws RangeError for non-integer length', () => {
+  assert.throws(() => generateSecureRandomString(5.5), RangeError);
+});
+
 console.log('All tests passed!');
