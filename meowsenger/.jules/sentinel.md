@@ -19,3 +19,14 @@ Real-time subscription channels (like Socket.IO rooms) must have the exact same 
 
 **Prevention:**
 Always query the database (`prisma.chatParticipant.findUnique`) inside the socket event handler to explicitly verify the `socket.data.userId` has permission to join the requested `roomId` before calling `socket.join(roomId)`. Default to deny for any unrecognized room patterns.
+
+## 2026-04-08 - Insecure Access Control via Header Injection
+
+**Vulnerability:**
+API endpoints were retrieving the current user's ID from the `x-user-id` header. Although a proxy/middleware (`meowsenger/proxy.ts`) was intended to populate this header from a secure session token, the endpoints themselves did not verify the session. An attacker could bypass the proxy or exploit a misconfiguration to inject a custom `x-user-id` header, effectively spoofing any user identity.
+
+**Learning:**
+Trusting downstream headers for authentication is an anti-pattern unless the environment strictly guarantees they cannot be supplied by the client. Relying on internal "trust layers" without defense-in-depth at the endpoint level creates a single point of failure.
+
+**Prevention:**
+Always derive identity from the source of truth (session cookies/tokens) directly within the endpoint or a robust, non-bypassable authentication middleware. Use utilities like `getSession()` which verify the signature of the session token before returning the user ID.

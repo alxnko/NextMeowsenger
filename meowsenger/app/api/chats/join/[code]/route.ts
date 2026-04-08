@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 // POST: Join a chat via invite code
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ code: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { code } = await params;
 
   if (!userId) {

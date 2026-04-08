@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 export async function PATCH(request: Request) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

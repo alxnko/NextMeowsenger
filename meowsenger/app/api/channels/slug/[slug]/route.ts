@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 // GET /api/channels/slug/[slug] - Get public channel by slug
 export async function GET(
@@ -7,7 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
 
   try {
     const chat = await prisma.chat.findUnique({

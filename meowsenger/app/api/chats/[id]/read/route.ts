@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { id } = await params;
 
   if (!userId) {

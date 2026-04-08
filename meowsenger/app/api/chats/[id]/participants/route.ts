@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSecureRandomString } from "@/lib/utils";
+import { getSession } from "@/lib/auth";
 
 // POST: Add specific user (Admin only)
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   let participantIds: string[];
   try {
     const body = await request.json();
@@ -111,7 +113,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   let targetUserId: string | undefined;
   try {
     const body = await request.json();
@@ -164,7 +167,8 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { targetUserId, role } = await request.json(); // role: "ADMIN" | "MEMBER"
   const { id: chatId } = await params;
 

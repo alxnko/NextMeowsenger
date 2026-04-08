@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 // PUT /api/chats/[id]/settings
 // Updates chat settings (Name, Visibility, Description) - Admin Only
@@ -7,7 +8,8 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const userId = request.headers.get("x-user-id");
+  const session = await getSession();
+  const userId = session?.id;
   const { name, visibility, description } = await request.json();
   const { id: chatId } = await params;
 
