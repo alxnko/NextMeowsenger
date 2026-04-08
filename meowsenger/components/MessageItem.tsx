@@ -139,9 +139,19 @@ export const MessageItem = React.memo(
             {/* Reply Reference */}
             {msg.replyToId && (
               <div
+                role="button"
+                tabIndex={0}
+                aria-label={`Jump to replied message from ${replyToSenderUsername || "Unknown"}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (msg.replyToId) jumpToMessage(msg.replyToId);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (msg.replyToId) jumpToMessage(msg.replyToId);
+                  }
                 }}
                 className={`mb-2 px-2 py-1.5 rounded-xl border-l-4 cursor-pointer transition-colors
                   ${
