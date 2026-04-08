@@ -30,10 +30,9 @@ describe('crypto-utils', () => {
   describe('encryptChatMessage', () => {
     it('should encrypt and allow decryption for multiple recipients', async () => {
       const content = "Hello, everyone!";
-      const recipients = [];
       const numRecipients = 3;
 
-      for (let i = 0; i < numRecipients; i++) {
+      const recipientPromises = Array.from({ length: numRecipients }, async (_, i) => {
         const keyPair = await webcrypto.subtle.generateKey(
           {
             name: "RSA-OAEP",
@@ -44,12 +43,14 @@ describe('crypto-utils', () => {
           true,
           ["encrypt", "decrypt"],
         );
-        recipients.push({
+        return {
           userId: `user-${i}`,
           publicKey: keyPair.publicKey,
           privateKey: keyPair.privateKey
-        });
-      }
+        };
+      });
+
+      const recipients = await Promise.all(recipientPromises);
 
       const recipientPublicKeys = recipients.map(r => ({ userId: r.userId, key: r.publicKey }));
 
