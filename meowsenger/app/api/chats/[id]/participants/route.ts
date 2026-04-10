@@ -148,6 +148,33 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (!isSelf) {
+      const targetParticipant = await prisma.chatParticipant.findUnique({
+        where: { userId_chatId: { userId: targetId!, chatId } },
+      });
+
+      if (!targetParticipant) {
+        return NextResponse.json(
+          { error: "Target participant not found" },
+          { status: 404 },
+        );
+      }
+
+      if (targetParticipant.role === "OWNER") {
+        return NextResponse.json(
+          { error: "Cannot remove owner" },
+          { status: 403 },
+        );
+      }
+
+      if (targetParticipant.role === "ADMIN" && requester.role !== "OWNER") {
+        return NextResponse.json(
+          { error: "Only the owner can remove an admin" },
+          { status: 403 },
+        );
+      }
+    }
+
     await prisma.chatParticipant.delete({
       where: { userId_chatId: { userId: targetId!, chatId } },
     });
