@@ -87,10 +87,12 @@ export function ChatSettingsDrawer({
       });
       const data = await res.json();
       // Filter out users already in the chat
-      const existingMemberIds =
-        chatDetails?.participants?.map((p: any) => p.userId) || [];
+      // ⚡ Bolt: Use a Set for existingMemberIds to optimize filtering from O(N*M) to O(N) lookup
+      const existingMemberIds = new Set(
+        chatDetails?.participants?.map((p: any) => p.userId) || []
+      );
       const availableContacts = (data.contacts || [])
-        .filter((c: any) => !existingMemberIds.includes(c.id))
+        .filter((c: any) => !existingMemberIds.has(c.id))
         .map((c: any) => ({
           id: c.id,
           username: c.username,
