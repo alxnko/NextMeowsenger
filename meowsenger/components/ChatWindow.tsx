@@ -486,6 +486,9 @@ export function ChatWindow({ chatId }: { chatId: string }) {
 
   const handleDeleteMessages = () => {
     if (!socket || !user) return;
+    if (!window.confirm("Are you sure you want to delete these messages?")) {
+      return;
+    }
     Array.from(selectedMsgIds).forEach((id) => {
       socket.emit("delete_message", { messageId: id, userId: user.id });
     });
@@ -495,6 +498,9 @@ export function ChatWindow({ chatId }: { chatId: string }) {
 
   const deleteSingleMessage = useCallback((msgId: string) => {
     if (!socket || !user) return;
+    if (!window.confirm("Are you sure you want to delete this message?")) {
+      return;
+    }
     socket.emit("delete_message", { messageId: msgId, userId: user.id });
   }, [socket, user]);
 
