@@ -17,6 +17,10 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (visibility && !["PUBLIC", "PRIVATE"].includes(visibility)) {
+    return NextResponse.json({ error: "Invalid Visibility" }, { status: 400 });
+  }
+
   try {
     // 1. Check permissions (Admin/Owner)
     const participant = await prisma.chatParticipant.findUnique({
