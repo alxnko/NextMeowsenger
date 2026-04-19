@@ -232,11 +232,14 @@ export default function SocketHandler(
             where: { chatId: data.chatId },
           });
 
-          console.log(`[Socket] Notifying ${participants.length} participants to refresh sidebars`);
-          participants.forEach((p: any) => {
-            io.to(`user_${p.userId}`).emit("refresh_chats", {
-              chatId: data.chatId,
-            });
+          console.log(
+            `[Socket] Notifying ${participants.length} participants to refresh sidebars (batch)`,
+          );
+          const participantRooms = participants.map(
+            (p: any) => `user_${p.userId}`,
+          );
+          io.to(participantRooms).emit("refresh_chats", {
+            chatId: data.chatId,
           });
         } catch (err) {
           console.error("[Socket] Failed to process message:", err);
@@ -360,11 +363,13 @@ export default function SocketHandler(
             return;
           }
 
-          console.log(`[Socket] Notifying ${chat.participants.length} participants of new chat ${chatId}`);
-          chat.participants.forEach((p) => {
-             console.log(`[Socket] Emitting new_chat to user_${p.userId}`);
-             io.to(`user_${p.userId}`).emit("new_chat", data.chat);
-          });
+          console.log(
+            `[Socket] Notifying ${chat.participants.length} participants of new chat ${chatId} (batch)`,
+          );
+          const participantRooms = chat.participants.map(
+            (p: any) => `user_${p.userId}`,
+          );
+          io.to(participantRooms).emit("new_chat", data.chat);
 
         } catch (e) {
             console.error("Notify new chat error", e);
