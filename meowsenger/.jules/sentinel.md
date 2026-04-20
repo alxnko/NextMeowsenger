@@ -30,3 +30,14 @@ Trusting downstream headers for authentication is an anti-pattern unless the env
 
 **Prevention:**
 Always derive identity from the source of truth (session cookies/tokens) directly within the endpoint or a robust, non-bypassable authentication middleware. Use utilities like `getSession()` which verify the signature of the session token before returning the user ID.
+
+## 2026-06-12 - Privilege Escalation via Mass Assignment
+
+**Vulnerability:**
+The `PUT /api/chats/[id]/settings` endpoint directly accepted the `visibility` field from the request payload and passed it to the `prisma.chat.update` method without validating if the value was allowed. Since `visibility` in the Prisma schema is defined as a `String` rather than an Enum, an attacker could supply arbitrary strings (e.g., `HACKED_PUBLIC`) causing the database to store invalid visibility states, potentially bypassing privacy logic or breaking the frontend.
+
+**Learning:**
+When database schemas use flexible types (like `String`) instead of strict Enums for fields that represent discrete states (e.g., roles, visibility, status), the application layer MUST enforce strict validation before writing to the database. Failing to do so allows mass assignment and data corruption.
+
+**Prevention:**
+Always validate input parameters against an allowlist of valid constants (e.g., `["PUBLIC", "PRIVATE"].includes(visibility)`) before passing them to the ORM or database, especially when the database schema cannot enforce the constraint natively.
