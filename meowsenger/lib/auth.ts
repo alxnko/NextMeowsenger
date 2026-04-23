@@ -2,19 +2,11 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import crypto from "node:crypto";
 import { verifySession, signSession } from "./session";
-
-// Helper to lazily fetch secret and prevent top-level Next.js build issues
-function getSecretKey(): string {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET environment variable is not defined");
-  }
-  return secret;
-}
+import { getRequiredEnv } from "./utils";
 
 // Helper to sign data
 export function sign(data: string): string {
-  return crypto.createHmac("sha256", getSecretKey()).update(data).digest("hex");
+  return crypto.createHmac("sha256", getRequiredEnv("SESSION_SECRET")).update(data).digest("hex");
 }
 
 // Helper to verify signature
