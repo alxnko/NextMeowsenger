@@ -41,29 +41,30 @@ export async function GET(request: Request) {
 
     // Collect senderIds from lastMessages that are not in the fetched participants
     const missingSenderIds = new Set<string>();
+    const chatsWithMissingSenders: any[] = [];
     const chats = participants.map((p: any) => {
       const chat = p.chat;
       const lastMessage = chat.messages[0] || null;
 
-      let senderInParticipants = true;
+      const chatObj = {
+        ...chat,
+        lastMessage,
+        lastReadAt: p.lastReadAt,
+      };
 
       if (lastMessage) {
         const senderId = lastMessage.senderId;
         // Check if sender is among the fetched participants
-        senderInParticipants = chat.participants.some(
+        const senderInParticipants = chat.participants.some(
           (cp: any) => cp.user.id === senderId,
         );
         if (!senderInParticipants) {
           missingSenderIds.add(senderId);
+          chatsWithMissingSenders.push(chatObj);
         }
       }
 
-      return {
-        ...chat,
-        lastMessage,
-        lastReadAt: p.lastReadAt,
-        _senderInParticipants: senderInParticipants, // Store result for second pass
-      };
+      return chatObj;
     });
 
     // Fetch missing sender details
@@ -76,27 +77,20 @@ export async function GET(request: Request) {
       const userMap = new Map(additionalUsers.map((u) => [u.id, u]));
 
       // Append missing senders to chat participants so frontend can resolve "You: ..." or "Username: ..."
-      for (const chat of chats) {
-        if (chat.lastMessage && !chat._senderInParticipants) {
-          const user = userMap.get(chat.lastMessage.senderId);
-          if (user) {
-            // Structure it like a ChatParticipant
-            chat.participants.push({
-              user,
-              userId: user.id,
-              chatId: chat.id,
-              // Minimal dummy fields if needed by types, though frontend mainly accesses .user
-              role: "MEMBER",
-              encryptedKey: "",
-            });
-          }
+      for (const chat of chatsWithMissingSenders) {
+        const user = userMap.get(chat.lastMessage.senderId);
+        if (user) {
+          // Structure it like a ChatParticipant
+          chat.participants.push({
+            user,
+            userId: user.id,
+            chatId: chat.id,
+            // Minimal dummy fields if needed by types, though frontend mainly accesses .user
+            role: "MEMBER",
+            encryptedKey: "",
+          });
         }
       }
-    }
-
-    // Clean up temporary performance optimization property
-    for (const chat of chats) {
-      delete chat._senderInParticipants;
     }
 
     chats.sort((a: any, b: any) => {
