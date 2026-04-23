@@ -497,6 +497,7 @@ export function NewChatModal({
                         </p>
                         {slugMessage && (
                           <p
+                            aria-live="polite"
                             className={`text-[10px] ${slugStatus === "available" ? "text-green-600" : "text-red-500"}`}
                           >
                             {slugMessage}
@@ -515,7 +516,7 @@ export function NewChatModal({
               )}
 
               {error && (
-                <p className="text-xs text-red-500 mt-2 text-center">{error}</p>
+                <p aria-live="polite" className="text-xs text-red-500 mt-2 text-center">{error}</p>
               )}
             </ModalBody>
             <ModalFooter>
