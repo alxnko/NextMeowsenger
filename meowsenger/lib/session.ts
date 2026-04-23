@@ -2,13 +2,12 @@ const encoder = new TextEncoder();
 
 let cachedKey: CryptoKey | null = null;
 
+import { getRequiredEnv } from "./utils";
+
 async function getKey(): Promise<CryptoKey> {
   if (cachedKey) return cachedKey;
 
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET environment variable is not defined");
-  }
+  const secret = getRequiredEnv("SESSION_SECRET");
 
   const secretKeyData = encoder.encode(secret);
 

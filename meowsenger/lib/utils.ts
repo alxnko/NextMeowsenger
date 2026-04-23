@@ -26,3 +26,18 @@ export function generateSecureRandomString(length: number): string {
 
   return result.join("");
 }
+
+/**
+ * Retrieves a required environment variable or throws an error if it's missing.
+ *
+ * @param key The environment variable key.
+ * @returns The value of the environment variable.
+ * @throws Error if the environment variable is not defined.
+ */
+export function getRequiredEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`${key} environment variable is not defined`);
+  }
+  return value;
+}
