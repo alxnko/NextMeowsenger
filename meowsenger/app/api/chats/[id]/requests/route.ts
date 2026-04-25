@@ -60,15 +60,11 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    // Check admin role and fetch request concurrently
-    const [requester, joinRequest] = await Promise.all([
-      prisma.chatParticipant.findUnique({
-        where: { userId_chatId: { userId, chatId } },
-      }),
-      prisma.joinRequest.findUnique({
-        where: { id: requestId },
-      })
-    ]);
+    // Security Check: Authorization checks must strictly precede and fully resolve
+    // before protected data queries are executed to prevent security anti-patterns like timing attacks.
+    const requester = await prisma.chatParticipant.findUnique({
+      where: { userId_chatId: { userId, chatId } },
+    });
 
     if (
       !requester ||
@@ -76,6 +72,10 @@ export async function PUT(
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const joinRequest = await prisma.joinRequest.findUnique({
+      where: { id: requestId },
+    });
 
     if (!joinRequest || joinRequest.chatId !== chatId)
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
