@@ -190,7 +190,7 @@ export function ContactPicker({
           </span>
           <button
             onClick={() => onSelectionChange([])}
-            className="text-xs text-[#00ff82] hover:underline"
+            className="text-xs text-[#00ff82] hover:underline focus-visible:ring-2 focus-visible:ring-[#00ff82] focus-visible:outline-none rounded"
           >
             Clear all
           </button>
