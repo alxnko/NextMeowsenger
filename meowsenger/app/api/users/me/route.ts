@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { validateUsername } from "@/lib/validation";
 
 export async function PATCH(request: Request) {
   const session = await getSession();
@@ -15,20 +16,17 @@ export async function PATCH(request: Request) {
     const { username, allowAutoGroupAdd } = body;
 
     // Validation
-    if (
-      username !== undefined &&
-      (typeof username !== "string" || username.trim().length < 3)
-    ) {
-      return NextResponse.json(
-        { error: "Username must be at least 3 characters" },
-        { status: 400 },
-      );
+    if (username !== undefined) {
+      const errorMsg = validateUsername(username);
+      if (errorMsg) {
+        return NextResponse.json({ error: errorMsg }, { status: 400 });
+      }
     }
 
     // Check availability if username is changing
     if (username !== undefined) {
       const existing = await prisma.user.findUnique({
-        where: { username: username.trim() },
+        where: { username },
       });
 
       if (existing && existing.id !== userId) {
@@ -41,7 +39,7 @@ export async function PATCH(request: Request) {
 
     // Update
     const updateData: any = {};
-    if (username !== undefined) updateData.username = username.trim();
+    if (username !== undefined) updateData.username = username;
     if (allowAutoGroupAdd !== undefined)
       updateData.allowAutoGroupAdd = allowAutoGroupAdd;
 
