@@ -15,6 +15,10 @@ vi.mock('next/server', () => ({
 }));
 
 // Mock prisma client
+vi.mock('@/lib/auth', () => ({
+  getSession: vi.fn(),
+}));
+
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: {
@@ -69,6 +73,9 @@ describe('GET /api/users/check-username', () => {
       headers: { 'x-user-id': 'current-user-id' }
     });
 
+    const auth = await import('@/lib/auth');
+    vi.mocked(auth.getSession).mockResolvedValueOnce({ id: 'current-user-id' } as any);
+
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'other-user-id' } as any);
 
     const response = await GET(request);
@@ -80,6 +87,9 @@ describe('GET /api/users/check-username', () => {
     const request = new Request('http://localhost/api/users/check-username?username=myusername', {
       headers: { 'x-user-id': 'my-user-id' }
     });
+
+    const auth = await import('@/lib/auth');
+    vi.mocked(auth.getSession).mockResolvedValueOnce({ id: 'my-user-id' } as any);
 
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'my-user-id' } as any);
 

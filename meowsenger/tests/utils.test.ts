@@ -69,7 +69,12 @@ describe('generateSecureRandomString', () => {
   });
 
   it('throws RangeError for extremely large length', () => {
-    expect(() => generateSecureRandomString(10 ** 10)).toThrow(RangeError);
+    try {
+      generateSecureRandomString(10 ** 10);
+      expect.fail('Should have thrown RangeError');
+    } catch(e: any) {
+      if (e.name !== 'RangeError') throw e;
+    }
   });
 
   it('throws RangeError for non-integer length', () => {
