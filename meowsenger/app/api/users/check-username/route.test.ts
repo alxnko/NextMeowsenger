@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET } from './route';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
 
 // Mock next/server
 vi.mock('next/server', () => ({
@@ -23,6 +24,11 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+// Mock auth
+vi.mock('@/lib/auth', () => ({
+  getSession: vi.fn(),
+}));
+
 describe('GET /api/users/check-username', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -30,6 +36,7 @@ describe('GET /api/users/check-username', () => {
 
   it('should return 400 if username is missing', async () => {
     const request = new Request('http://localhost/api/users/check-username');
+    vi.mocked(getSession).mockResolvedValue(null);
 
     const response = await GET(request);
 
@@ -41,11 +48,12 @@ describe('GET /api/users/check-username', () => {
 
   it('should return 200 with available: false if username is too short', async () => {
     const request = new Request('http://localhost/api/users/check-username?username=ab');
+    vi.mocked(getSession).mockResolvedValue(null);
 
     const response = await GET(request);
 
     expect(NextResponse.json).toHaveBeenCalledWith(
-      { available: false, error: "Username must be at least 3 characters" },
+      { available: false, error: "Username must be 3-20 characters long and contain only letters, numbers, and underscores." },
       { status: 200 }
     );
   });
@@ -53,6 +61,7 @@ describe('GET /api/users/check-username', () => {
   it('should return available: true if username does not exist', async () => {
     const request = new Request('http://localhost/api/users/check-username?username=newuser');
     
+    vi.mocked(getSession).mockResolvedValue(null);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
 
     const response = await GET(request);
@@ -65,10 +74,9 @@ describe('GET /api/users/check-username', () => {
   });
 
   it('should return available: false if username exists and belongs to another user', async () => {
-    const request = new Request('http://localhost/api/users/check-username?username=existinguser', {
-      headers: { 'x-user-id': 'current-user-id' }
-    });
+    const request = new Request('http://localhost/api/users/check-username?username=existinguser');
 
+    vi.mocked(getSession).mockResolvedValue({ id: 'current-user-id' } as any);
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'other-user-id' } as any);
 
     const response = await GET(request);
@@ -77,10 +85,9 @@ describe('GET /api/users/check-username', () => {
   });
 
   it('should return available: true if username exists but belongs to current user', async () => {
-    const request = new Request('http://localhost/api/users/check-username?username=myusername', {
-      headers: { 'x-user-id': 'my-user-id' }
-    });
+    const request = new Request('http://localhost/api/users/check-username?username=myusername');
 
+    vi.mocked(getSession).mockResolvedValue({ id: 'my-user-id' } as any);
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: 'my-user-id' } as any);
 
     const response = await GET(request);
@@ -91,6 +98,7 @@ describe('GET /api/users/check-username', () => {
   it('should return 500 if database query fails', async () => {
     const request = new Request('http://localhost/api/users/check-username?username=erroruser');
 
+    vi.mocked(getSession).mockResolvedValue(null);
     vi.mocked(prisma.user.findUnique).mockRejectedValue(new Error('DB Error'));
 
     // Silence console.error for this test

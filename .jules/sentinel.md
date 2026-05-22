@@ -20,3 +20,13 @@
 **Vulnerability:** In `meowsenger/app/api/chats/[id]/requests/route.ts`, an authorization check (`prisma.chatParticipant.findUnique`) and a protected data query (`prisma.joinRequest.findUnique`) were executed concurrently using `Promise.all`.
 **Learning:** This is a severe security anti-pattern. If the database executes the queries concurrently, the protected data is fetched *before* the authorization check resolves. This creates a race condition that could be exploited via timing attacks or subtle application logic errors to infer the existence or contents of protected records, even if the application eventually returns a 403 Forbidden.
 **Prevention:** Authorization queries must strictly precede and fully resolve before any protected data queries are initiated. Use sequential `await` calls instead of `Promise.all` when authorization is a prerequisite for data access.
+## 2025-05-22 - Missing Authentication and Inconsistent Validation in API Endpoints
+**Vulnerability:**
+1. Missing Authentication (`GET /api/users`): The user search endpoint lacked authentication entirely, allowing unauthenticated attackers to perform unhindered user enumeration.
+2. Inconsistent Validation (`PATCH /api/users/me`): The profile update endpoint relied on weak length checks instead of utilizing the rigorous, centralized `validateUsername()` function defined in the codebase.
+**Learning:**
+1. In `GET /api/users`, user search endpoints often get overlooked during the implementation of access control.
+2. In `PATCH /api/users/me` and `GET /api/users/check-username`, validation rules written inline drift from centralized truth over time. Since we only validated `trim().length < 3` here, users could have bypassed the regex rules enforced during signup and updated their usernames to contain invalid characters.
+**Prevention:**
+1. Enforce a standard template for new API endpoints that includes `getSession()` directly as the first action, returning a 401 Unauthorized if missing.
+2. Never rely on inline validation for domain objects (like username, password). Always utilize centralized validation helpers (like `validateUsername` from `@/lib/validation`). Always apply validation to raw user input before applying mutations like `.trim()`.

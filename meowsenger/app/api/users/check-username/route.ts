@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { validateUsername } from "@/lib/validation";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,9 +13,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Username required" }, { status: 400 });
   }
 
-  if (username.trim().length < 3) {
+  const usernameError = validateUsername(username);
+  if (usernameError) {
     return NextResponse.json(
-      { available: false, error: "Username must be at least 3 characters" },
+      { available: false, error: usernameError },
       { status: 200 },
     );
   }
