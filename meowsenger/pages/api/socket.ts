@@ -177,37 +177,41 @@ export default function SocketHandler(
 
           const now = new Date();
           console.log(`[Socket] Creating message in DB for chat ${data.chatId}...`);
-          const message = await prisma.message.create({
-            data: {
-              chatId: data.chatId,
-              senderId: senderId, // Trusted ID
-              encryptedContent: data.content,
-              replyToId: data.replyToId,
-              isForwarded: data.isForwarded || false,
-              createdAt: now,
-            },
-            include: {
-              replyTo: true,
-            },
-          });
-          console.log(`[Socket] Message created with ID: ${message.id}`);
 
-          await prisma.chat.update({
-            where: { id: data.chatId },
-            data: { updatedAt: now },
-          });
-
-          await prisma.chatParticipant.update({
-            where: {
-              userId_chatId: {
-                userId: senderId,
+          // ⚡ Bolt: Transactional batching for faster sequential queries
+          // By bundling create+update into a single $transaction, we save multiple
+          // round-trips to the DB, reducing latency significantly in a real-time path.
+          const [message] = await prisma.$transaction([
+            prisma.message.create({
+              data: {
                 chatId: data.chatId,
+                senderId: senderId, // Trusted ID
+                encryptedContent: data.content,
+                replyToId: data.replyToId,
+                isForwarded: data.isForwarded || false,
+                createdAt: now,
               },
-            },
-            data: {
-              lastReadAt: now,
-            },
-          });
+              include: {
+                replyTo: true,
+              },
+            }),
+            prisma.chat.update({
+              where: { id: data.chatId },
+              data: { updatedAt: now },
+            }),
+            prisma.chatParticipant.update({
+              where: {
+                userId_chatId: {
+                  userId: senderId,
+                  chatId: data.chatId,
+                },
+              },
+              data: {
+                lastReadAt: now,
+              },
+            })
+          ]);
+          console.log(`[Socket] Message created with ID: ${message.id}`);
 
           // Send confirmation back to sender with real DB ID
           socket.emit("message_sent", {
