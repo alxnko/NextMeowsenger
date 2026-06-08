@@ -13,3 +13,7 @@
 ## 2024-04-20 - [Base64 Conversion Overhead for Small Payloads]
 **Learning:** Using asynchronous `FileReader` and `Blob` APIs for converting `ArrayBuffer` to Base64 introduces a massive performance overhead (up to ~100x slower) for small buffers like 256-byte AES keys compared to synchronous conversion using `window.btoa(String.fromCharCode.apply(null, bytes))`. While the async approach is necessary for very large files to avoid blocking the main thread and exceeding `Function.prototype.apply` argument limits (typically 65536), applying it uniformly to all buffer sizes severely impacts the performance of operations that encode multiple small keys, such as key wrapping for group chats.
 **Action:** Always use a hybrid approach for `ArrayBuffer` to Base64 conversion: use `String.fromCharCode.apply` (or similar synchronous methods) for buffers under a safe threshold (e.g., < 32768 bytes), and fall back to the async `FileReader` approach only for larger payloads.
+
+## 2026-06-08 - Wrapping Sequential DB Mutations in Prisma Transactions
+**Learning:** Performing multiple sequential database mutations (e.g., creating a message, updating the chat's timestamp, and updating the sender's read status) introduces unnecessary round-trips and I/O latency.
+**Action:** Always wrap these related sequential mutations in a `prisma.$transaction([])` block to execute them in a single optimized database round-trip.
