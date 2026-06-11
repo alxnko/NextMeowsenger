@@ -141,6 +141,7 @@ export function ContactPicker({
     <div className={cn("flex flex-col gap-3", className)}>
       {/* Search Input */}
       <Input
+        aria-label="Search contacts"
         placeholder={searchPlaceholder}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}

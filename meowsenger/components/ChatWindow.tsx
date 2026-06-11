@@ -827,6 +827,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
                   className="flex gap-2 max-w-4xl mx-auto"
                 >
                   <Input
+                    aria-label="Type a message"
                     placeholder={
                       privateKey
                         ? "Broadcast message..."
@@ -899,6 +900,7 @@ export function ChatWindow({ chatId }: { chatId: string }) {
             className="flex gap-2 max-w-4xl mx-auto"
           >
             <Input
+              aria-label="Type a message"
               placeholder={
                 privateKey ? "Secure transmission..." : "Unlocking station..."
               }
