@@ -9,3 +9,7 @@
 ## 2024-06-10 - ARIA Labels for visually hidden input contexts
 **Learning:** In reusable UI components like `<Input />`, providing a visual `label` is not always appropriate (e.g., search bars, inline chat inputs). In these contexts, relying solely on placeholders is insufficient for screen readers.
 **Action:** When a visible label is omitted from an input control, always supply an explicit `aria-label` attribute (e.g., `aria-label="Type a message"`) to guarantee accessibility and semantic meaning.
+
+## 2024-06-17 - Missing ARIA roles on dynamically rendered error messages
+**Learning:** Dynamically rendered inline error messages, such as those shown conditionally within form inputs, are not automatically announced by screen readers if they lack an explicit ARIA role. Even if the error is linked via `aria-describedby` when `aria-invalid` is set, applying `role="alert"` ensures immediate user notification of the error without requiring them to navigate back or re-focus the input.
+**Action:** Always add `role="alert"` to the container of dynamically rendered inline validation errors.
