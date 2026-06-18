@@ -83,6 +83,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {error && (
           <p
             id={`${inputId}-error`}
+            role="alert"
             className="text-[13px] text-red-500 px-1 font-medium animate-fadeIn"
           >
             {error}
