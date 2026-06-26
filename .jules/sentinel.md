@@ -20,3 +20,8 @@
 **Vulnerability:** In `meowsenger/app/api/chats/[id]/requests/route.ts`, an authorization check (`prisma.chatParticipant.findUnique`) and a protected data query (`prisma.joinRequest.findUnique`) were executed concurrently using `Promise.all`.
 **Learning:** This is a severe security anti-pattern. If the database executes the queries concurrently, the protected data is fetched *before* the authorization check resolves. This creates a race condition that could be exploited via timing attacks or subtle application logic errors to infer the existence or contents of protected records, even if the application eventually returns a 403 Forbidden.
 **Prevention:** Authorization queries must strictly precede and fully resolve before any protected data queries are initiated. Use sequential `await` calls instead of `Promise.all` when authorization is a prerequisite for data access.
+
+## 2024-06-20 - [CRITICAL/HIGH] Fix Authorization Bypass in User Search
+**Vulnerability:** The `GET /api/users` endpoint allowed unauthenticated users to search for and retrieve basic user profiles (including IDs and public keys) because it lacked a session verification check.
+**Learning:** Endpoints that seem like utility functions or public search features must still enforce authentication in a private application context to prevent data scraping or enumeration by unauthenticated attackers.
+**Prevention:** Consistently apply `getSession()` checks on all endpoints that handle user data, even for seemingly low-sensitivity read operations, unless the endpoint is explicitly designed for public access (like a public landing page or signup).
